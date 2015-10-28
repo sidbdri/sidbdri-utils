@@ -43,13 +43,13 @@ declare -A BIOMART_URL=(
 )
 
 function download_from_ensembl {
-    FILE=$1
+    local FILE=$1
 
     wget --user=anonymous --password=${EMAIL} ftp://ftp.ensembl.org/${FILE}
 }
 
 function get_assembly_type {
-    SPECIES=$1 
+    local SPECIES=$1 
 
     if [ "${SPECIES}" == "human" ] || [ "${SPECIES}" == "mouse" ] ; then
         echo "primary_assembly"
@@ -59,15 +59,15 @@ function get_assembly_type {
 }
 
 function get_gene_database {
-    SCIENTIFIC_NAME=$1
+    local SCIENTIFIC_NAME=$1
 
     echo $(echo ${scientific_name} | sed 's/\(.\).*_\(.*\)/\1\2/')_gene_ensembl
 }
 
 function download_orthologs {
-    ORTHOLOG_SPECIES=$1
-    BIOMART_URL=$2
-    GENE_DATABASE=$3
+    local ORTHOLOG_SPECIES=$1
+    local BIOMART_URL=$2
+    local GENE_DATABASE=$3
 
     ortho_sci_name=${SCIENTIFIC_NAME["$ORTHOLOG_SPECIES"]}
     ortho_short_name=$(echo ${ortho_sci_name} | sed 's/\(.\).*_\(.*\)/\1\2/')
