@@ -29,7 +29,6 @@ declare -A BIOMART_URL=(
 
 function download_from_ensembl {
     FILE=$1
-    EMAIL=$2
 
     wget --user=anonymous --password=${EMAIL} ftp://ftp.ensembl.org/${FILE}
 }
@@ -50,6 +49,18 @@ function get_gene_database {
     echo $(echo ${scientific_name} | sed 's/\(.\).*_\(.*\)/\1\2/')_gene_ensembl
 }
 
+function download_orthologs {
+    ORTHOLOG_SPECIES=$1
+    BIOMART_URL=$2
+    GENE_DATABASE=$3
+
+    ortho_sci_name=${SCIENTIFIC_NAME["$ORTHOLOG_SPECIES"]}
+    ortho_short_name=$(echo ${ortho_sci_name} | sed 's/\(.\).*_\(.*\)/\1\2/')
+    ortho_shorter_name=${ortho_short_name:0:4}
+
+    wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${GENE_DATABASE}\" interface = \"default\" ><Filter name = \"with_homolog_${ortho_shorter_name}\" excluded = \"0\"/><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /><Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /></Dataset></Query>"
+}
+
 scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
 assembly=${ASSEMBLY["$SPECIES"]}
 assembly_type=$(get_assembly_type ${SPECIES})
@@ -63,7 +74,7 @@ cd ${assembly_type}
 
 genome_fasta=${scientific_name^}.${assembly}.dna.${assembly_type}.fa
 
-download_from_ensembl pub/release-${VERSION}/fasta/${scientific_name}/dna/${genome_fasta}.gz ${EMAIL}
+download_from_ensembl pub/release-${VERSION}/fasta/${scientific_name}/dna/${genome_fasta}.gz
 
 gunzip ${genome_fasta}.gz
 sed -i 's/^>\(.*\) dna.*$/>\1/' ${genome_fasta}
@@ -72,10 +83,10 @@ mv ${genome_fasta} ../${SPECIES}_${assembly_type}.fa
 cd ..
 
 # Download annotation GTF file
-
+#
 gtf_file=${scientific_name^}.${assembly}.${VERSION}.gtf
 
-download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.gz ${EMAIL}
+download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.gz
 
 gunzip ${gtf_file}.gz
 
@@ -93,5 +104,9 @@ wget -qO- "http://${biomart_url}/biomart/martservice?query=<?xml version=\"1.0\"
     awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($3==a[$3]) print $0}' <(ls -1 ${assembly_type} | sed 's/.fa//') - > genes.tsv
 
 if [[ "${SPECIES}" != "mouse" ]]; then
-    wget -O mouse_orthologs.tsv "http://${biomart_url}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${gene_database}\" interface = \"default\" ><Filter name = \"with_homolog_mmus\" excluded = \"0\"/><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"mmusculus_homolog_ensembl_gene\" /><Attribute name = \"mmusculus_homolog_orthology_type\" /></Dataset></Query>"
+    download_orthologs mouse ${biomart_url} ${gene_database}
+fi
+
+if [[ "${SPECIES}" != "human" ]]; then
+    download_orthologs human ${biomart_url} ${gene_database}
 fi
