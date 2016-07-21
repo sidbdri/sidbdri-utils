@@ -75,7 +75,7 @@ function download_orthologs {
     ortho_short_name=$(echo ${ortho_sci_name} | sed 's/\(.\).*_\(.*\)/\1\2/')
     ortho_shorter_name=${ortho_short_name:0:4}
 
-    wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${GENE_DATABASE}\" interface = \"default\" ><Filter name = \"with_homolog_${ortho_shorter_name}\" excluded = \"0\"/><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /><Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /></Dataset></Query>"
+    wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"1\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${GENE_DATABASE}\" interface = \"default\" ><Filter name = \"with_homolog_${ortho_shorter_name}\" excluded = \"0\"/><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /><Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /></Dataset></Query>"
 }
 
 scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
@@ -117,7 +117,7 @@ STAR --runThreadN 8 --runMode genomeGenerate --genomeDir ${star_index_dir} --gen
 
 # Download gene and ortholog information
 
-wget -qO- "http://${biomart_url}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${gene_database}\" interface = \"default\" ><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"description\" /><Attribute name = \"chromosome_name\" /><Attribute name = \"external_gene_name\" /></Dataset></Query>" |\
+wget -qO- "http://${biomart_url}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"1\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${gene_database}\" interface = \"default\" ><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"description\" /><Attribute name = \"chromosome_name\" /><Attribute name = \"external_gene_name\" /></Dataset></Query>" |\
     awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($3==a[$3]) print $0}' <(ls -1 ${assembly_type} | sed 's/.fa//') - > genes.tsv
 
 if [[ "${SPECIES}" != "mouse" ]]; then
