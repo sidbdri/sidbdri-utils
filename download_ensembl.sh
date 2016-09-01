@@ -58,7 +58,7 @@ function get_assembly_type {
     if [ "${SPECIES}" == "human" ] || [ "${SPECIES}" == "mouse" ] ; then
         echo "primary_assembly"
     else
-        echo "top_level"
+        echo "toplevel"
     fi
 }
 
