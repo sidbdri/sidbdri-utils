@@ -119,15 +119,20 @@ mkdir -p ${star_index_dir}
 
 STAR --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${star_index_dir} --genomeFastaFiles $(list_files ' ' ${assembly_type}/*.fa) --sjdbGTFfile ${gtf_file} --sjdbOverhang 100
 
-# Create Salmon index
+# Create Salmon and Kallisto indexes
 
 salmon_index_dir=salmon_index
+kallisto_index_dir=kallisto_index
+
+transcripts_ref=${salmon_index_dir}/transcripts
+transcripts_fasta=${transcripts_ref}.transcripts.fa
 
 mkdir -p ${salmon_index_dir}
 
-rsem-prepare-reference -p ${NUM_THREADS} --gtf ${gtf_file} ${assembly_type} ${salmon_index_dir}/transcripts
+rsem-prepare-reference -p ${NUM_THREADS} --gtf ${gtf_file} ${assembly_type} ${transcripts_ref}
 
-salmon index -p ${NUM_THREADS} -t ${salmon_index_dir}/transcripts.transcripts.fa -i ${salmon_index_dir}
+salmon index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
+kallisto index -i ${kallisto_index} ${transcripts_fasta}
 
 # Download gene and ortholog information
 
