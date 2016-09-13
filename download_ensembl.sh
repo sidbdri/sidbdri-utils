@@ -132,7 +132,10 @@ mkdir -p ${salmon_index_dir}
 rsem-prepare-reference -p ${NUM_THREADS} --gtf ${gtf_file} ${assembly_type} ${transcripts_ref}
 
 salmon index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
+echo "Salmon index created with $(salmon --version 2>&1)." >> README
+
 kallisto index -i ${kallisto_index} ${transcripts_fasta}
+echo "Kallisto index created with $(kallisto version)." >> README
 
 # Download gene and ortholog information
 
