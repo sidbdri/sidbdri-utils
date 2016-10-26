@@ -123,7 +123,6 @@ STAR --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${star_ind
 # Create Salmon and Kallisto indexes
 
 salmon_index_dir=salmon_index
-kallisto_index_dir=kallisto_index
 
 transcripts_ref=${salmon_index_dir}/transcripts
 transcripts_fasta=${transcripts_ref}.transcripts.fa
@@ -135,7 +134,7 @@ rsem-prepare-reference -p ${NUM_THREADS} --gtf ${gtf_file} ${assembly_type} ${tr
 salmon index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
 echo "Salmon index created with $(salmon --version 2>&1)." >> README
 
-kallisto index -i ${kallisto_index_dir} ${transcripts_fasta}
+kallisto index -i kallisto_index ${transcripts_fasta}
 echo "Kallisto index created with $(kallisto version)." >> README
 
 # Download gene and ortholog information
