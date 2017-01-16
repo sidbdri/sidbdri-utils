@@ -73,12 +73,19 @@ function download_orthologs {
     local ORTHOLOG_SPECIES=$1
     local BIOMART_URL=$2
     local GENE_DATABASE=$3
+    local ENSEMBL_VERSION=$4
 
     ortho_sci_name=${SCIENTIFIC_NAME["$ORTHOLOG_SPECIES"]}
     ortho_short_name=$(echo ${ortho_sci_name} | sed 's/\(.\).*_\(.*\)/\1\2/')
     ortho_shorter_name=${ortho_short_name:0:4}
 
-    wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${GENE_DATABASE}\" interface = \"default\" ><Filter name = \"with_homolog_${ortho_shorter_name}\" excluded = \"0\"/><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /><Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /></Dataset></Query>"
+    if [ "${ENSEMBL_VERSION}" -ge "86" ]; then
+        filter_name="with_${ortho_short_name}_homolog"
+    else
+        filter_name="with_homolog_${ortho_shorter_name}"
+    fi
+
+    wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?> <!DOCTYPE Query> <Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" > <Dataset name = \"${GENE_DATABASE}\" interface = \"default\" > <Filter name = \"${filter_name}\" excluded = \"0\"/> <Attribute name = \"ensembl_gene_id\" /> <Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /> <Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /> </Dataset> </Query>"
 }
 
 NUM_THREADS=16
@@ -143,9 +150,9 @@ wget -qO- "http://${biomart_url}/biomart/martservice?query=<?xml version=\"1.0\"
     awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($3==a[$3]) print $0}' <(ls -1 ${assembly_type} | sed 's/.fa//') - > genes.tsv
 
 if [[ "${SPECIES}" != "mouse" ]]; then
-    download_orthologs mouse ${biomart_url} ${gene_database}
+    download_orthologs mouse ${biomart_url} ${gene_database} ${VERSION}
 fi
 
 if [[ "${SPECIES}" != "human" ]]; then
-    download_orthologs human ${biomart_url} ${gene_database}
+    download_orthologs human ${biomart_url} ${gene_database} ${VERSION}
 fi
