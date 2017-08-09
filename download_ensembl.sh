@@ -38,7 +38,9 @@ declare -A ASSEMBLY=(
 )
 
 declare -A BIOMART_URL=(
-    ["87"]="www.ensembl.org"
+    ["89"]="www.ensembl.org"
+    ["88"]="mar2017.archive.ensembl.org"
+    ["87"]="dec2016.archive.ensembl.org"
     ["86"]="oct2016.archive.ensembl.org"
     ["85"]="jul2016.archive.ensembl.org"
     ["84"]="mar2016.archive.ensembl.org"
