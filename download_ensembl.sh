@@ -29,16 +29,23 @@ declare -A SCIENTIFIC_NAME=(
     ["human"]="homo_sapiens"
     ["mouse"]="mus_musculus"
     ["rat"]="rattus_norvegicus"
+    ["macaque"]="macaca_mulatta"
+    ["chimpanzee"]="pan_troglodytes"
+    ["castaneus"]="mus_musculus_casteij"
 )
 
 declare -A ASSEMBLY=(
     ["human"]="GRCh38"
     ["mouse"]="GRCm38"
     ["rat"]="Rnor_6.0"
+    ["macaque"]="Mmul_8.0.1"
+    ["chimpanzee"]="CHIMP2.1.4"
+    ["castaneus"]="CAST_EiJ_v1"
 )
 
 declare -A BIOMART_URL=(
-    ["89"]="www.ensembl.org"
+    ["90"]="www.ensembl.org"
+    ["89"]="may2017.archive.ensembl.org"
     ["88"]="mar2017.archive.ensembl.org"
     ["87"]="dec2016.archive.ensembl.org"
     ["86"]="oct2016.archive.ensembl.org"
@@ -64,6 +71,20 @@ function get_assembly_type {
     else
         echo "toplevel"
     fi
+}
+
+function get_gtf_file {
+    local SPECIES=$1
+    local VERSION=$2
+
+    scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
+    assembly=${ASSEMBLY["$SPECIES"]}
+
+    if [ "${SPECIES}" == "castaneus" ] ; then
+        VERSION=86
+    fi
+
+    echo ${scientific_name^}.${assembly}.${VERSION}.gtf
 }
 
 function get_gene_database {
@@ -115,8 +136,8 @@ mv ${genome_fasta} ../${SPECIES}_${assembly_type}.fa
 cd ..
 
 # Download annotation GTF file
-#
-gtf_file=${scientific_name^}.${assembly}.${VERSION}.gtf
+
+gtf_file=$(get_gtf_file ${SPECIES} ${VERSION})
 
 download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.gz
 
