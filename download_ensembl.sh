@@ -19,8 +19,6 @@
 set -o nounset
 set -o errexit
 
-source functions.sh
-
 SPECIES=$1
 VERSION=$2
 EMAIL=$3
@@ -44,7 +42,8 @@ declare -A ASSEMBLY=(
 )
 
 declare -A BIOMART_URL=(
-    ["90"]="www.ensembl.org"
+    ["91"]="www.ensembl.org"
+    ["90"]="aug2017.archive.ensembl.org"
     ["89"]="may2017.archive.ensembl.org"
     ["88"]="mar2017.archive.ensembl.org"
     ["87"]="dec2016.archive.ensembl.org"
@@ -112,6 +111,17 @@ function download_orthologs {
     wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?> <!DOCTYPE Query> <Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" > <Dataset name = \"${GENE_DATABASE}\" interface = \"default\" > <Filter name = \"${filter_name}\" excluded = \"0\"/> <Attribute name = \"ensembl_gene_id\" /> <Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /> <Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /> </Dataset> </Query>"
 }
 
+# Returns files matching the specified pattern(s) separated by a particular
+# delimiter character.
+function list_files {
+    local DELIMITER=$1
+    shift
+    local FILES=$@
+        
+    LIST=$(ls -1 $FILES | tr '\n' "$DELIMITER")
+    echo ${LIST%$DELIMITER}    
+}
+
 NUM_THREADS=16
 
 scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
@@ -145,11 +155,13 @@ gunzip ${gtf_file}.gz
 
 # Create STAR indices
 
-star_index_dir=STAR_indices/${assembly_type}
+star_index_dir_253a=${assembly_type}_2.5.3a
 
-mkdir -p ${star_index_dir}
+mkdir -p STAR_indices/${star_index_dir_253a}
 
-STAR --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir ${star_index_dir} --genomeFastaFiles $(list_files ' ' ${assembly_type}/*.fa) --sjdbGTFfile ${gtf_file} --sjdbOverhang 100
+STAR2.5.3a --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir STAR_indices/${star_index_dir_253a} --genomeFastaFiles $(list_files ' ' ${assembly_type}/*.fa) --sjdbGTFfile ${gtf_file} --sjdbOverhang 100
+
+ln -s ${star_index_dir_253a} STAR_indices/${assembly_type}
 
 # Create Salmon and Kallisto indexes
 
