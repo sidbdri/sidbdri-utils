@@ -10,7 +10,7 @@ The script:
 2) Downloads gene annotations in GTF format,
 3) Creates a genome index for the STAR mapping tool,
 4) Builds Salmon and Kallisto indexes for the transcripts defined in the GTF file,
-5) Downloads gene information (gene id, name, chromosome, description) into a
+5) Downloads gene information (gene id, name, chromosome, description, Entrez ID) into a
 file 'genes.tsv'. Only genes on primary assembly sequences are retained (i.e.
 those on patch sequences are removed),
 6) Downloads information on mouse and human orthologous genes to files
