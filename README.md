@@ -13,5 +13,6 @@ The script:
 5) Downloads gene information (gene id, name, chromosome, description) into a
 file 'genes.tsv'. Only genes on primary assembly sequences are retained (i.e.
 those on patch sequences are removed),
+6) Downloads transcript information (transcript id, transcript biotype, gene id, chromosome) into a file 'transcripts.tsv'. Only transcripts for genes on primary assembly sequences are retained.
 6) Downloads information on mouse and human orthologous genes to files
 '<species>_orthologs.tsv'.
