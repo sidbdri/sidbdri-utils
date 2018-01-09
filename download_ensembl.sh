@@ -149,9 +149,10 @@ cd ..
 
 gtf_file=$(get_gtf_file ${SPECIES} ${VERSION})
 
-download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.gz
+download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.gz  
 
-gunzip ${gtf_file}.gz
+gunzip -c ${gtf_file}.gz | tail -n +6 > ${gtf_file}
+rm ${gtf_file}.gz
 
 # Create STAR indices
 
