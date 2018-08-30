@@ -30,6 +30,8 @@ declare -A SCIENTIFIC_NAME=(
     ["macaque"]="macaca_mulatta"
     ["chimpanzee"]="pan_troglodytes"
     ["castaneus"]="mus_musculus_casteij"
+    ["pig"]="sus_scrofa"
+    ["cow"]="bos_taurus"
 )
 
 declare -A ASSEMBLY=(
@@ -39,10 +41,13 @@ declare -A ASSEMBLY=(
     ["macaque"]="Mmul_8.0.1"
     ["chimpanzee"]="CHIMP2.1.4"
     ["castaneus"]="CAST_EiJ_v1"
+    ["pig"]="Sscrofa11.1"
+    ["cow"]="UMD3.1"
 )
 
 declare -A BIOMART_URL=(
-    ["92"]="www.ensembl.org"
+    ["93"]="www.ensembl.org"
+    ["92"]="apr2018.archive.ensembl.org"
     ["91"]="dec2017.archive.ensembl.org"
     ["90"]="aug2017.archive.ensembl.org"
     ["89"]="may2017.archive.ensembl.org"
