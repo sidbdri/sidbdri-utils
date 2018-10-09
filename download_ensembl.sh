@@ -191,9 +191,9 @@ echo "Kallisto index created with $(kallisto version)." >> README
 # Create bowtie indexes
 bowtie2_index_dir_234=${assembly_type}_2.3.4
 
-mkdir -p bowtie2_indices/${star_index_dir_253a}
+mkdir -p bowtie2_indices/${bowtie2_index_dir_234}
 
-bowtie2-build --threads ${NUM_THREADS} $(list_files ' ' ${assembly_type}/*.fa) bowtie2_indices/${star_index_dir_253a}/bt2index
+bowtie2-build --threads ${NUM_THREADS} *.fa bowtie2_indices/${bowtie2_index_dir_234}/bt2index
 
 ln -s ${bowtie2_index_dir_234} bowtie2_indices/${assembly_type}
 
