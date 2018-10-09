@@ -187,6 +187,15 @@ echo "Salmon index created with $(salmon --version 2>&1)." >> README
 kallisto index -i kallisto_index ${transcripts_fasta}
 echo "Kallisto index created with $(kallisto version)." >> README
 
+# Create bowtie indexes
+bowtie2_index_dir_234=${assembly_type}_2.3.4
+
+mkdir -p bowtie2_indices/${star_index_dir_253a}
+
+bowtie2-build --threads ${NUM_THREADS} $(list_files ' ' ${assembly_type}/*.fa) bowtie2_indices/${star_index_dir_253a}/bt2index
+
+ln -s ${bowtie2_index_dir_234} bowtie2_indices/${assembly_type}
+
 # Download gene and ortholog information
 
 wget -qO- "http://${biomart_url}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Query><Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" ><Dataset name = \"${gene_database}\" interface = \"default\" ><Attribute name = \"ensembl_gene_id\" /><Attribute name = \"description\" /><Attribute name = \"chromosome_name\" /><Attribute name = \"external_gene_name\" /><Attribute name = \"entrezgene\" /><Attribute name = \"gene_biotype\" /></Dataset></Query>" |\
