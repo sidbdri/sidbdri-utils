@@ -63,6 +63,29 @@ declare -A BIOMART_URL=(
     ["80"]="may2015.archive.ensembl.org"
 )
 
+STAR_VERSIONS=(
+    "STAR2.5.3a"
+    "STAR2.6.1d"
+)
+
+KALLISTO_VERSIONS=(
+    "kallisto0.43.1"
+    "kallisto0.45.0"
+)
+
+RSEM_VERSION=1.3.1
+
+SALMON_VERSIONS=(
+    "salmon0.8.2"
+    "salmon0.12.0"
+)
+
+BOWTIE2_VERSIONS=(
+    "bowtie2-2.3.4"
+    "bowtie2-2.3.4.3"
+)
+
+
 function download_from_ensembl {
     local FILE=$1
 
@@ -161,41 +184,69 @@ download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.
 gunzip -c ${gtf_file}.gz | tail -n +6 > ${gtf_file}
 rm ${gtf_file}.gz
 
+
+
 # Create STAR indices
+for star in ${STAR_VERSIONS[@]}
+do
+    star_version="$(echo ${star} | sed 's/STAR//')"
+    star_index_dir=${assembly_type}_${star_version}
 
-star_index_dir_253a=${assembly_type}_2.5.3a
+    mkdir -p STAR_indices/${star_index_dir}
 
-mkdir -p STAR_indices/${star_index_dir_253a}
+    ${star} --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir STAR_indices/${star_index_dir} --genomeFastaFiles $(list_files ' ' ${assembly_type}/*.fa) --sjdbGTFfile ${gtf_file} --sjdbOverhang 100
+done
+rm -rf STAR_indices/${assembly_type}
+ln -s STAR_indices/${assembly_type}_${STAR_VERSIONS[-1]} STAR_indices/${assembly_type}
 
-STAR2.5.3a --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir STAR_indices/${star_index_dir_253a} --genomeFastaFiles $(list_files ' ' ${assembly_type}/*.fa) --sjdbGTFfile ${gtf_file} --sjdbOverhang 100
-
-ln -s ${star_index_dir_253a} STAR_indices/${assembly_type}
 
 # Create Salmon and Kallisto indexes
-
-salmon_index_dir=salmon_index
-
-transcripts_ref=${salmon_index_dir}/transcripts
+transcripts_ref=transcripts_ref/transcripts
 transcripts_fasta=${transcripts_ref}.transcripts.fa
+mkdir -p ${transcripts_ref}
+rsem-prepare-reference${RSEM_VERSION} -p ${NUM_THREADS} --gtf ${gtf_file} ${assembly_type} ${transcripts_ref}
 
-mkdir -p ${salmon_index_dir}
+for salmon in ${SALMON_VERSIONS[@]}
+do
+    salmon_version="$(echo ${salmon} | sed 's/salmon//')"
+    salmon_index_dir=SALMON_indices/${assembly_type}_${salmon_version}
 
-rsem-prepare-reference -p ${NUM_THREADS} --gtf ${gtf_file} ${assembly_type} ${transcripts_ref}
+    mkdir -p ${salmon_index_dir}
 
-salmon index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
-echo "Salmon index created with $(salmon --version 2>&1)." >> README
+    salmon index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
+    echo "Salmon index created with $(salmon --version 2>&1)." >> README
+done
+rm -rf SALMON_indices/${assembly_type}
+ln -s SALMON_indices/${assembly_type}_${SALMON_VERSIONS[-1]} SALMON_indices/${assembly_type}
 
-kallisto index -i kallisto_index ${transcripts_fasta}
-echo "Kallisto index created with $(kallisto version)." >> README
+for kallisto in ${KALLISTO_VERSIONS[@]}
+do
+    kallisto_version="$(echo ${kallisto} | sed 's/kallisto//')"
+    kallisto_index_dir=KALLISTO_indices/${assembly_type}_${kallisto_version}
+
+    mkdir -p ${kallisto_index_dir}
+
+    kallisto index -i ${kallisto_index_dir}/kallisto_index ${transcripts_fasta}
+    echo "Kallisto index created with $(kallisto --version 2>&1)." >> README
+done
+rm -rf KALLISTO_indices/${assembly_type}
+ln -s KALLISTO_indices/${assembly_type}_${KALLISTO_VERSIONS[-1]}/kallisto_index KALLISTO_indices/${assembly_type}
+
 
 # Create bowtie indexes
-bowtie2_index_dir_234=${assembly_type}_2.3.4
 
-mkdir -p bowtie2_indices/${bowtie2_index_dir_234}
+for bowtie2 in ${BOWTIE2_VERSIONS[@]}
+do
+    bowtie2_version="$(echo ${bowtie2} | sed 's/bowtie2-//')"
+    bowtie2_index_dir=BOWTIE2_indices/${assembly_type}_${bowtie2_version}
 
-bowtie2-build --threads ${NUM_THREADS} *.fa bowtie2_indices/${bowtie2_index_dir_234}/bt2index
+    mkdir -p ${bowtie2_index_dir}
 
-ln -s ${bowtie2_index_dir_234} bowtie2_indices/${assembly_type}
+    bowtie2-build${bowtie2_version} --threads ${NUM_THREADS} *.fa ${bowtie2_index_dir}/bt2index
+
+done
+rm -rf BOWTIE2_indices/${assembly_type}
+ln -s BOWTIE2_indices/${assembly_type}_${BOWTIE2_VERSIONS[-1]} BOWTIE2_indices/${assembly_type}
 
 # Download gene and ortholog information
 
