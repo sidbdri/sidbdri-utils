@@ -23,6 +23,14 @@ SPECIES=$1
 VERSION=$2
 EMAIL=$3
 
+function cleanup {
+   echo "Killing all sub-processes..."
+   kill -- -$$
+}
+
+trap exit INT
+trap cleanup EXIT
+
 declare -A SCIENTIFIC_NAME=(
     ["human"]="homo_sapiens"
     ["mouse"]="mus_musculus"
