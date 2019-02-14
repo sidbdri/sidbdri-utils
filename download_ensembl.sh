@@ -65,7 +65,7 @@ declare -A BIOMART_URL=(
     ["87"]="dec2016.archive.ensembl.org"
     ["86"]="oct2016.archive.ensembl.org"
     ["85"]="jul2016.archive.ensembl.org"
-    ["84"]="mar2016.archive.ensembl.org"
+    ["84"]="mar2016.archive.ensembl.org"REF_FLAT
     ["83"]="dec2015.archive.ensembl.org"
     ["82"]="sep2015.archive.ensembl.org"
     ["81"]="jul2015.archive.ensembl.org"
@@ -92,6 +92,12 @@ SALMON_VERSIONS=(
 BOWTIE2_VERSIONS=(
     "bowtie2-2.3.4"
     "bowtie2-2.3.4.3"
+)
+
+declare -A RFF_FILES=(
+        ["mouse"]="Mus_musculus.GRCm38.${VERSION}.rff"
+        ["human"]="Homo_sapiens.GRCh38.${VERSION}.rff"
+        ["rat"]="Rattus_norvegicus.Rnor_6.0.${VERSION}.rff"
 )
 
 
@@ -272,3 +278,14 @@ fi
 if [[ "${SPECIES}" != "human" ]]; then
     download_orthologs human ${biomart_url} ${gene_database} ${VERSION}
 fi
+
+# Generating refFlat file for Picard RNA-seq metrics
+PICARD_DATA=picard
+ref_flat=${PICARD_DATA}/${RFF_FILES["$SPECIES"]}
+mkdir -p ${PICARD_DATA}
+gtfToGenePred -genePredExt -geneNameAsName2 ${gtf_file} ${PICARD_DATA}/refFlat.tmp.txt
+paste <(cut -f 12 ${PICARD_DATA}/refFlat.tmp.txt) <(cut -f 1-10 ${PICARD_DATA}/refFlat.tmp.txt) > ${ref_flat}
+rm ${PICARD_DATA}/refFlat.tmp.txt
+
+
+
