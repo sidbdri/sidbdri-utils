@@ -87,7 +87,9 @@ Usage:
         -1 pattern for read 1 files. default: "*_1.fastq.gz"
         -2 pattern for read 1 files. default: ""*_2.fastq.gz""
         -p number of cores. default: 1
+        -t test-mode, which will use only the first 10 line from read files. default: false
         -h see help page
+
 Example:
     bash ena_upload_preprocess.sh  -i /srv/data/ghardingham/dreadd_phasel -o ~/tmp/dreadd_phasel -s "Gs_Cnt_A Gs_Cnt_B" -1 "*_1.fastq.gz" -2 "*_2.fastq.gz" -p 10
 
@@ -101,12 +103,14 @@ EOT
 #OUT_DIR=~/tmp/${DATA_DIR##*/}
 
 ## default value
+
 SAMPLE_NAMES=''
 READ1_IDENTIFIER="*_1.fastq.gz"
 READ2_IDENTIFIER="*_2.fastq.gz"
 NUM_CORES=1
+TEST_MODE=false
 
-while getopts 'i:o:s:1:2:p:' opt; do
+while getopts 'i:o:s:1:2:p:t' opt; do
   case ${opt} in
     i)  DATA_DIR=${OPTARG}    ;;
     o)  OUT_DIR=${OPTARG}    ;;
@@ -114,6 +118,7 @@ while getopts 'i:o:s:1:2:p:' opt; do
     1)  READ1_IDENTIFIER=${OPTARG}        ;;
     2)  READ2_IDENTIFIER=${OPTARG}            ;;
     p)  NUM_CORES=${OPTARG}            ;;
+    t)  TEST_MODE=true      ;;
     *)  usage; exit         ;;
   esac
 done
@@ -124,7 +129,7 @@ if [ -z ${SAMPLE_NAMES} ]; then
     echo ${SAMPLE_NAMES}
 fi
 
-#
+
 FINAL_DIR=${OUT_DIR}/final
 #SAMPLE_NAMES="Gs_Cnt_A Gs_Cnt_B"
 
@@ -184,7 +189,8 @@ function merge_reads(){
     sample=$2
     read_index=$3
     out_dir=$4
-    read_files=${@:5}
+    test_mode=$5
+    read_files=${@:6}
 
     merged_file=${tmp_dir}/${sample}/merged/${sample}_${read_index}.fastq
     merged_compress_file=${merged_file}.gz
@@ -192,19 +198,30 @@ function merge_reads(){
     rm -rf ${merged_file} ${merged_compress_file} ${out_file}
 
     ## we unzip the reads and concat into one file
-    for f in ${read_files}; do
-       gzip -cdk ${f} >>  ${merged_file}
-    done
+    if [ "$test_mode" = true ]; then
+        for f in ${read_files}; do
+            zcat -cdk ${f} | head -10 >>  ${merged_file}
+        done
+    else
+        for f in ${read_files}; do
+           gzip -cdk ${f} >>  ${merged_file}
+         done
+    fi
 
-#    for f in ${read_files}; do
-#       zcat -cdk ${f} | head -4 >>  ${merged_file}
-#    done
 
     ## check if merged reads file has the same number of rows as the sum of the pre-merged read files
     lines_in_merged_file=`wc -l ${merged_file} | awk '{print $1}'`
-    lines_in_pre_merged_file=`for f in ${read_files}; do
+
+    if [ "$test_mode" = true ]; then
+       lines_in_pre_merged_file=`for f in ${read_files}; do
+                                 zcat ${f} | head -10 |wc -l
+                              done | awk '{ SUM += $0} END { print SUM }'`
+    else
+        lines_in_pre_merged_file=`for f in ${read_files}; do
                                  zcat ${f} | wc -l
                               done | awk '{ SUM += $0} END { print SUM }'`
+    fi
+
 
     if [ ! ${lines_in_merged_file} -eq ${lines_in_pre_merged_file} ];then
          >&2 echo "Error: number of rows differ after concatenating read files.  \
@@ -263,8 +280,8 @@ for sample in ${SAMPLE_NAMES}; do
          exit 1
     fi
 
-    echo "merge_reads ${OUT_DIR} ${sample} 1 ${FINAL_DIR} " ${read_1_files}
-    echo "merge_reads ${OUT_DIR} ${sample} 2 ${FINAL_DIR} " ${read_2_files}
+    echo "merge_reads ${OUT_DIR} ${sample} 1 ${FINAL_DIR} ${TEST_MODE} " ${read_1_files}
+    echo "merge_reads ${OUT_DIR} ${sample} 2 ${FINAL_DIR} ${TEST_MODE} " ${read_2_files}
 done |  xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
 
 
@@ -277,8 +294,8 @@ done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
 ## we generate md5sum for final fastq.gz
 echo "Generate md5sum for final reads..."
 for sample in ${SAMPLE_NAMES}; do
-    echo "md5sum ${FINAL_DIR}/${sample}_1.fastq.gz"
-    echo "md5sum ${FINAL_DIR}/${sample}_2.fastq.gz"
+    echo "cd ${FINAL_DIR} && md5sum ${sample}_1.fastq.gz"
+    echo "cd ${FINAL_DIR} && md5sum ${sample}_2.fastq.gz"
 done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%" > ${FINAL_DIR}/md5sum.txt
 
 echo "Finished! The ready-to-upload reads can be found ${FINAL_DIR}"
