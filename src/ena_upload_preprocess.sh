@@ -18,6 +18,9 @@
 #   - check merged-compressed read1/read2 has the same number of rows
 # - Finish
 #
+# Tested with /srv/data/ghardingham/dreadd_phasel samples,
+# took around 12 hours to finish with 42 paired-read samples, in which
+# each pair of reads contains 3 read files.
 #
 # Note from Owen:
 # Multi-file case: /srv/data/ghardingham/dreadd_phasel
