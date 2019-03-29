@@ -1,6 +1,6 @@
 ## SIDB/DRI Informatics utility scripts
 
-### `download_ensembl.sh`
+#### `download_ensembl.sh`
 
 This script downloads and processes genome sequences and annotations for a particular species from an Ensembl release, e.g.
 
@@ -58,7 +58,7 @@ Now the genome folder will look like this: (example from mouse ensembl 94)
     `-- transcripts.transcripts.fa
 ```
 
-### `ena_upload_preprocess.sh`
+#### `ena_upload_preprocess.sh`
 
 The script will pre-process sample read files into a format for uploading to
 ENA. The procedure is as follows:
