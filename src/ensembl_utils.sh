@@ -1,0 +1,248 @@
+#!/usr/bin/env bash
+
+declare -A SCIENTIFIC_NAME=(
+    ["human"]="homo_sapiens"
+    ["mouse"]="mus_musculus"
+    ["rat"]="rattus_norvegicus"
+    ["macaque"]="macaca_mulatta"
+    ["chimpanzee"]="pan_troglodytes"
+    ["castaneus"]="mus_musculus_casteij"
+    ["pig"]="sus_scrofa"
+    ["cow"]="bos_taurus"
+)
+
+declare -A ASSEMBLY=(
+    ["human"]="GRCh38"
+    ["mouse"]="GRCm38"
+    ["rat"]="Rnor_6.0"
+    ["macaque"]="Mmul_8.0.1"
+    ["chimpanzee"]="CHIMP2.1.4"
+    ["castaneus"]="CAST_EiJ_v1"
+    ["pig"]="Sscrofa11.1"
+    ["cow"]="UMD3.1"
+)
+
+declare -A BIOMART_URL=(
+    ["95"]="www.ensembl.org"
+    ["94"]="oct2018.archive.ensembl.org"
+    ["93"]="jul2018.archive.ensembl.org"
+    ["92"]="apr2018.archive.ensembl.org"
+    ["91"]="dec2017.archive.ensembl.org"
+    ["90"]="aug2017.archive.ensembl.org"
+    ["89"]="may2017.archive.ensembl.org"
+    ["88"]="mar2017.archive.ensembl.org"
+    ["87"]="dec2016.archive.ensembl.org"
+    ["86"]="oct2016.archive.ensembl.org"
+    ["85"]="jul2016.archive.ensembl.org"
+    ["84"]="mar2016.archive.ensembl.org"
+    ["83"]="dec2015.archive.ensembl.org"
+    ["82"]="sep2015.archive.ensembl.org"
+    ["81"]="jul2015.archive.ensembl.org"
+    ["80"]="may2015.archive.ensembl.org"
+)
+
+
+function download_from_ensembl {
+    local FILE=$1
+
+    wget --user=anonymous --password=${EMAIL} ftp://ftp.ensembl.org/${FILE}
+}
+
+function get_assembly {
+    local SPECIES=$1
+
+    echo ${ASSEMBLY["$SPECIES"]}
+}
+
+
+function get_assembly_type {
+    local SPECIES=$1
+
+    if [ "${SPECIES}" == "human" ] || [ "${SPECIES}" == "mouse" ] ; then
+        echo "primary_assembly"
+    else
+        echo "toplevel"
+    fi
+}
+
+function get_gtf_file {
+    local SPECIES=$1
+    local VERSION=$2
+
+    local scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
+    local assembly=${ASSEMBLY["$SPECIES"]}
+
+    if [ "${SPECIES}" == "castaneus" ] ; then
+        VERSION=86
+    fi
+
+    echo ${scientific_name^}.${assembly}.${VERSION}.gtf
+}
+
+function get_gene_database {
+    local SCIENTIFIC_NAME=$1
+
+    echo $(echo ${SCIENTIFIC_NAME} | sed 's/\(.\).*_\(.*\)/\1\2/')_gene_ensembl
+}
+
+function get_scientific_name {
+    local SPECIES=$1
+
+    echo ${SCIENTIFIC_NAME["$SPECIES"]}
+}
+
+function get_biomart_url {
+    local VERSION=$1
+
+    echo ${BIOMART_URL["${VERSION}"]}
+}
+
+function get_primary_chromesome {
+    local SPECIES=$1
+    local VERSION=$2
+
+    local enmsebl_folder="/srv/data/genome"
+    local assembly_type=`get_assembly_type ${SPECIES}`
+
+    ls -1 ${enmsebl_folder}/${SPECIES}/ensembl-${VERSION}/${assembly_type} | sed 's/.fa//'
+}
+
+function download_orthologs {
+    local SPECIES=$1
+    local ORTHOLOG_SPECIES=$2
+    local ENSEMBL_VERSION=$3
+
+    local scientific_name=`get_scientific_name ${SPECIES}`
+    local gene_database=`get_gene_database ${scientific_name}`
+    local assembly_type=`get_assembly_type ${SPECIES}`
+
+    local ortho_sci_name=`get_scientific_name ${ORTHOLOG_SPECIES}`
+    local ortho_short_name=$(echo ${ortho_sci_name} | sed 's/\(.\).*_\(.*\)/\1\2/')
+    local ortho_shorter_name=${ortho_short_name:0:4}
+
+    if [ "${ENSEMBL_VERSION}" -ge "86" ]; then
+        filter_name="with_${ortho_short_name}_homolog"
+    else
+        filter_name="with_homolog_${ortho_shorter_name}"
+    fi
+
+
+
+local query=`cat <<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE Query>
+        <Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" >
+            <Dataset name = "${gene_database}" interface = "default" >
+            <Filter name = "${filter_name}" excluded = "0"/>
+            <Attribute name = "ensembl_gene_id" />
+            <Attribute name = "${ortho_short_name}_homolog_ensembl_gene" />
+            <Attribute name = "${ortho_short_name}_homolog_orthology_type" />
+    </Dataset>
+</Query>
+EOT`
+
+query_biomart ${ENSEMBL_VERSION} "${query}" false false
+
+
+
+#    wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?> <!DOCTYPE Query> <Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" > <Dataset name = \"${GENE_DATABASE}\" interface = \"default\" > <Filter name = \"${filter_name}\" excluded = \"0\"/> <Attribute name = \"ensembl_gene_id\" /> <Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /> <Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /> </Dataset> </Query>"
+}
+
+
+function query_biomart {
+    local VERSION=$1
+    local XML=$2
+    local HEADER=${3:-true}
+    local PEEK=${4:-false}
+
+#    echo "$@"
+
+    if [  -s "${XML}" ]; then
+        local query="$(cat ${XML})"
+        local header=`grep 'Attribute name' ${XML} | sed -E 's/.+= \"(.+)\".+/\1/' | tr "\n" "\t" | sed 's/\t$/\n/'`
+    else
+        local query="${XML}"
+        local header=`echo ${query} | sed -E 's/>/>\n/g' | grep 'Attribute name' | sed -E 's/.+= \"(.+)\".+/\1/' | tr "\n" "\t" | sed 's/\t$/\n/'`
+    fi
+
+    local biomart_url=`get_biomart_url ${VERSION}`
+
+    query="http://${biomart_url}/biomart/martservice?query="$(echo $query | tr -d '\n')
+
+    if [ "${HEADER}" = true ] ; then
+        echo ${header}
+    fi
+
+
+    if [ "${PEEK}" = true ] ; then
+        wget -qO- "$query" | head
+    else
+        wget -qO- "$query"
+    fi
+}
+
+
+function download_gene_tb {
+    local SPECIES=$1
+    local VERSION=$2
+
+    local scientific_name=`get_scientific_name ${SPECIES}`
+    local gene_database=`get_gene_database ${scientific_name}`
+    local assembly_type=`get_assembly_type ${SPECIES}`
+
+    query=`echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Query>
+<Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" >
+	<Dataset name = "gene_database" interface = "default" >
+		<Attribute name = "ensembl_gene_id" />
+		<Attribute name = "description" />
+		<Attribute name = "chromosome_name" />
+		<Attribute name = "external_gene_name" />
+		<Attribute name = "entrezgene" />
+		<Attribute name = "gene_biotype" />
+</Dataset>
+</Query>
+' |  sed "s/gene_database/${gene_database}/"`
+
+    #filter out non-primary chromesome
+    query_biomart ${VERSION} "${query}" false false | \
+    awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($3==a[$3]) print $0}' <( get_primary_chromesome ${SPECIES} ${VERSION} ) -
+}
+
+
+function download_transcript_tb {
+    local SPECIES=$1
+    local VERSION=$2
+
+    local scientific_name=`get_scientific_name ${SPECIES}`
+    local gene_database=`get_gene_database ${scientific_name}`
+    local assembly_type=`get_assembly_type ${SPECIES}`
+
+    query=`echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Query>
+	<Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" >
+		<Dataset name = "gene_database" interface = "default" >
+			<Attribute name = "ensembl_transcript_id" />
+			<Attribute name = "transcript_biotype" />
+			<Attribute name = "ensembl_gene_id" />
+			<Attribute name = "chromosome_name" />
+</Dataset>
+</Query>
+' |  sed "s/gene_database/${gene_database}/"`
+
+    #filter out non-primary chromesome
+    query_biomart ${VERSION} "${query}" false false | \
+    awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($4==a[$4]) print $0}' <( get_primary_chromesome ${SPECIES} ${VERSION} ) -
+}
+
+
+
+
+
+#if [[ "${SPECIES}" != "mouse" ]]; then
+#    download_orthologs mouse ${biomart_url} ${gene_database} ${VERSION}
+#fi
+#
+#if [[ "${SPECIES}" != "human" ]]; then
+#    download_orthologs human ${biomart_url} ${gene_database} ${VERSION}
+#fi
