@@ -1,7 +1,7 @@
 #!/bin/bash
 # Download and process data for a particular species from an Ensembl release, e.g.
 #
-# download_ensembl mouse 82 <your_email>
+# download_ensembl mouse 95 <your_email> /srv/data/ensembl
 #
 # The script:
 # 1) Downloads top-level sequences for the species' genome in FASTA format
@@ -23,6 +23,7 @@ set -o errexit
 SPECIES=$1
 VERSION=$2
 EMAIL=$3
+OUTPUT_DIR=$4
 
 function cleanup {
    echo "Killing all sub-processes..."
@@ -31,7 +32,6 @@ function cleanup {
 
 trap exit INT
 trap cleanup EXIT
-
 
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 source "${BASE_DIR}/../includes.sh"
@@ -64,8 +64,6 @@ declare -A RFF_FILES=(
         ["rat"]="Rattus_norvegicus.Rnor_6.0.${VERSION}.rff"
 )
 
-
-
 NUM_THREADS=16
 
 scientific_name=`get_scientific_name ${SPECIES}`
@@ -75,6 +73,9 @@ biomart_url==`get_biomart_url ${VERSION}`
 gene_database=`get_gene_database ${scientific_name}`
 
 # Download genome sequence FASTA files
+
+mkdir -p ${OUTPUT_DIR}
+cd ${OUTPUT_DIR}
 
 mkdir -p ${assembly_type}
 cd ${assembly_type}
@@ -98,8 +99,6 @@ download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.
 gunzip -c ${gtf_file}.gz | tail -n +6 > ${gtf_file}
 rm ${gtf_file}.gz
 
-
-
 # Create STAR indices
 for star in ${STAR_VERSIONS[@]}
 do
@@ -110,9 +109,9 @@ do
 
     ${star} --runThreadN ${NUM_THREADS} --runMode genomeGenerate --genomeDir STAR_indices/${star_index_dir} --genomeFastaFiles $(list_files ' ' ${assembly_type}/*.fa) --sjdbGTFfile ${gtf_file} --sjdbOverhang 100
 done
+
 rm -rf STAR_indices/${assembly_type}
 ln -s STAR_indices/${assembly_type}_${STAR_VERSIONS[-1]} STAR_indices/${assembly_type}
-
 
 # Create Salmon and Kallisto indexes
 transcripts_ref=transcripts_ref/transcripts
@@ -130,6 +129,7 @@ do
     salmon index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
     echo "Salmon index created with $(salmon --version 2>&1)." >> README
 done
+
 rm -rf SALMON_indices/${assembly_type}
 ln -s SALMON_indices/${assembly_type}_${SALMON_VERSIONS[-1]} SALMON_indices/${assembly_type}
 
@@ -143,11 +143,11 @@ do
     kallisto index -i ${kallisto_index_dir}/kallisto_index ${transcripts_fasta}
     echo "Kallisto index created with $(kallisto --version 2>&1)." >> README
 done
+
 rm -rf KALLISTO_indices/${assembly_type}
 ln -s KALLISTO_indices/${assembly_type}_${KALLISTO_VERSIONS[-1]}/kallisto_index KALLISTO_indices/${assembly_type}
 
-
-# Create bowtie indexes
+# Create Bowtie indexes
 
 for bowtie2 in ${BOWTIE2_VERSIONS[@]}
 do
@@ -159,6 +159,7 @@ do
     bowtie2-build${bowtie2_version} --threads ${NUM_THREADS} *.fa ${bowtie2_index_dir}/bt2index
 
 done
+
 rm -rf BOWTIE2_indices/${assembly_type}
 ln -s BOWTIE2_indices/${assembly_type}_${BOWTIE2_VERSIONS[-1]} BOWTIE2_indices/${assembly_type}
 
@@ -178,9 +179,7 @@ fi
 PICARD_DATA=picard
 ref_flat=${PICARD_DATA}/${RFF_FILES["$SPECIES"]}
 mkdir -p ${PICARD_DATA}
+
 gtfToGenePred -genePredExt -geneNameAsName2 ${gtf_file} ${PICARD_DATA}/refFlat.tmp.txt
 paste <(cut -f 12 ${PICARD_DATA}/refFlat.tmp.txt) <(cut -f 1-10 ${PICARD_DATA}/refFlat.tmp.txt) > ${ref_flat}
 rm ${PICARD_DATA}/refFlat.tmp.txt
-
-
-
