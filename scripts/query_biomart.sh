@@ -1,25 +1,22 @@
 #!/usr/bin/env bash
 
+VERSION="95"
+PEEK=false
+
 function usage {
   cat <<EOT
 
 Usage:
   $(basename $0) -s human [-v 94]
-        -v ensembl version. defaul: latest
+        -v ensembl version. default: ${VERSION}
         -q query xml file.
         -p peek the first 10 lines of the query results
         -h see help page
 Example:
-    bash query_biomart.sh  -s human -v latest -p -q ./gene_transcript_APPRIS.xml
+    bash query_biomart.sh -v 94 -p -q ./gene_transcript_APPRIS.xml
 
 EOT
 }
-
-
-VERSION="95"
-SPECIES='human'
-PEEK=false
-
 
 while getopts 'v:q:p' opt; do
   case ${opt} in
