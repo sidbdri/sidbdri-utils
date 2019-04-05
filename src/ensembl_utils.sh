@@ -97,7 +97,7 @@ function get_biomart_url {
     echo ${BIOMART_URL["${VERSION}"]}
 }
 
-function get_primary_chromesome {
+function get_primary_chromosomes {
     local SPECIES=$1
     local VERSION=$2
 
@@ -126,9 +126,7 @@ function download_orthologs {
         filter_name="with_homolog_${ortho_shorter_name}"
     fi
 
-
-
-local query=`cat <<EOT
+    local query=`cat <<EOT
 <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE Query>
         <Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" >
@@ -141,21 +139,14 @@ local query=`cat <<EOT
 </Query>
 EOT`
 
-query_biomart ${ENSEMBL_VERSION} "${query}" false false
-
-
-
-#    wget -O ${ORTHOLOG_SPECIES}_orthologs.tsv "http://${BIOMART_URL}/biomart/martservice?query=<?xml version=\"1.0\" encoding=\"UTF-8\"?> <!DOCTYPE Query> <Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" > <Dataset name = \"${GENE_DATABASE}\" interface = \"default\" > <Filter name = \"${filter_name}\" excluded = \"0\"/> <Attribute name = \"ensembl_gene_id\" /> <Attribute name = \"${ortho_short_name}_homolog_ensembl_gene\" /> <Attribute name = \"${ortho_short_name}_homolog_orthology_type\" /> </Dataset> </Query>"
+    query_biomart ${ENSEMBL_VERSION} "${query}" false false
 }
-
 
 function query_biomart {
     local VERSION=$1
     local XML=$2
     local HEADER=${3:-true}
     local PEEK=${4:-false}
-
-#    echo "$@"
 
     if [  -s "${XML}" ]; then
         local query="$(cat ${XML})"
@@ -173,14 +164,12 @@ function query_biomart {
         echo ${header}
     fi
 
-
     if [ "${PEEK}" = true ] ; then
         wget -qO- "$query" | head
     else
         wget -qO- "$query"
     fi
 }
-
 
 function download_gene_tb {
     local SPECIES=$1
@@ -204,11 +193,10 @@ function download_gene_tb {
 </Query>
 ' |  sed "s/gene_database/${gene_database}/"`
 
-    #filter out non-primary chromesome
+    # filter out non-primary chromosomes
     query_biomart ${VERSION} "${query}" false false | \
-    awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($3==a[$3]) print $0}' <( get_primary_chromesome ${SPECIES} ${VERSION} ) -
+    awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($3==a[$3]) print $0}' <( get_primary_chromosomes ${SPECIES} ${VERSION} ) -
 }
-
 
 function download_transcript_tb {
     local SPECIES=$1
@@ -230,19 +218,7 @@ function download_transcript_tb {
 </Query>
 ' |  sed "s/gene_database/${gene_database}/"`
 
-    #filter out non-primary chromesome
+    # filter out non-primary chromosomes
     query_biomart ${VERSION} "${query}" false false | \
-    awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($4==a[$4]) print $0}' <( get_primary_chromesome ${SPECIES} ${VERSION} ) -
+    awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($4==a[$4]) print $0}' <( get_primary_chromosomes ${SPECIES} ${VERSION} ) -
 }
-
-
-
-
-
-#if [[ "${SPECIES}" != "mouse" ]]; then
-#    download_orthologs mouse ${biomart_url} ${gene_database} ${VERSION}
-#fi
-#
-#if [[ "${SPECIES}" != "human" ]]; then
-#    download_orthologs human ${biomart_url} ${gene_database} ${VERSION}
-#fi
