@@ -4,7 +4,7 @@
 
 This script downloads and processes genome sequences and annotations for a particular species from an Ensembl release, e.g.
 
-    download_ensembl mouse 90 <your_email>
+    download_ensembl mouse 90 <your_email> <output_directory>
 
 The script:
 1) Downloads top-level sequences for the species' genome in FASTA format
@@ -21,8 +21,7 @@ primary assembly sequences are retained,
 7) Downloads information on mouse and human orthologous genes to files
 '<species>_orthologs.tsv'.
 
-
-Now the genome folder will look like this: (example from mouse ensembl 94)
+Now the output directory will look like this: (example from mouse ensembl 94)
 ```
 |-- BOWTIE2_indices
 |   |-- primary_assembly_2.3.4
