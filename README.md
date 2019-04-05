@@ -81,3 +81,7 @@ ENA. The procedure is as follows:
 - create a file in the output folder containing md5sums for the merged,
 compressed read files
 - finish
+
+#### `query_biomart.sh`
+
+Execute an XML query against a particular version of Biomart.
