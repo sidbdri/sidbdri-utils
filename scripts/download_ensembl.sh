@@ -163,6 +163,11 @@ done
 rm -rf BOWTIE2_indices/${assembly_type}
 ln -s BOWTIE2_indices/${assembly_type}_${BOWTIE2_VERSIONS[-1]} BOWTIE2_indices/${assembly_type}
 
+# Create Bisulfite index
+bismark_genome_preparation --bowtie2 --parallel ${NUM_THREADS} .
+
+
+
 # Download gene and ortholog information
 download_gene_tb ${SPECIES} ${VERSION} > genes.tsv
 download_transcript_tb ${SPECIES} ${VERSION} > transcripts.tsv
