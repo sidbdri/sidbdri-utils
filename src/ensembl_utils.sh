@@ -41,6 +41,11 @@ declare -A BIOMART_URL=(
     ["80"]="may2015.archive.ensembl.org"
 )
 
+declare -A RFF_FILES=(
+        ["mouse"]="Mus_musculus.GRCm38.${VERSION}.rff"
+        ["human"]="Homo_sapiens.GRCh38.${VERSION}.rff"
+        ["rat"]="Rattus_norvegicus.Rnor_6.0.${VERSION}.rff"
+)
 
 function download_from_ensembl {
     local FILE=$1
@@ -221,4 +226,19 @@ function download_transcript_tb {
     # filter out non-primary chromosomes
     query_biomart ${VERSION} "${query}" false false | \
     awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($4==a[$4]) print $0}' <( get_primary_chromosomes ${SPECIES} ${VERSION} ) -
+}
+
+
+function download_picard_refFlat  {
+    local PICARD_DATA_DIR=$1
+    local SPECIES=$2
+    local gtf_file=$3
+
+    local ref_flat=${PICARD_DATA_DIR}/${RFF_FILES["$SPECIES"]}
+    mkdir -p ${PICARD_DATA_DIR}
+
+    gtfToGenePred -genePredExt -geneNameAsName2 ${gtf_file} ${PICARD_DATA_DIR}/refFlat.tmp.txt
+    paste <(cut -f 12 ${PICARD_DATA_DIR}/refFlat.tmp.txt) <(cut -f 1-10 ${PICARD_DATA_DIR}/refFlat.tmp.txt) > ${ref_flat}
+    rm ${PICARD_DATA_DIR}/refFlat.tmp.txt
+
 }

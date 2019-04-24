@@ -58,11 +58,7 @@ BOWTIE2_VERSIONS=(
     "bowtie2-2.3.4.3"
 )
 
-declare -A RFF_FILES=(
-        ["mouse"]="Mus_musculus.GRCm38.${VERSION}.rff"
-        ["human"]="Homo_sapiens.GRCh38.${VERSION}.rff"
-        ["rat"]="Rattus_norvegicus.Rnor_6.0.${VERSION}.rff"
-)
+
 
 NUM_THREADS=16
 
@@ -182,10 +178,5 @@ if [[ "${SPECIES}" != "human" ]]; then
 fi
 
 # Generating refFlat file for Picard RNA-seq metrics
-PICARD_DATA=picard
-ref_flat=${PICARD_DATA}/${RFF_FILES["$SPECIES"]}
-mkdir -p ${PICARD_DATA}
 
-gtfToGenePred -genePredExt -geneNameAsName2 ${gtf_file} ${PICARD_DATA}/refFlat.tmp.txt
-paste <(cut -f 12 ${PICARD_DATA}/refFlat.tmp.txt) <(cut -f 1-10 ${PICARD_DATA}/refFlat.tmp.txt) > ${ref_flat}
-rm ${PICARD_DATA}/refFlat.tmp.txt
+download_picard_refFlat picard ${SPECIES} ${gtf_file}
