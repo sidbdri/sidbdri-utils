@@ -178,5 +178,5 @@ if [[ "${SPECIES}" != "human" ]]; then
 fi
 
 # Generating refFlat file for Picard RNA-seq metrics
-
-download_picard_refFlat picard ${SPECIES} ${gtf_file}
+mkdir -p picard
+download_picard_refFlat picard ${SPECIES} ${VERSION} ${gtf_file}

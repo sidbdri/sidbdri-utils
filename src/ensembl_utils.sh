@@ -41,11 +41,6 @@ declare -A BIOMART_URL=(
     ["80"]="may2015.archive.ensembl.org"
 )
 
-declare -A RFF_FILES=(
-        ["mouse"]="Mus_musculus.GRCm38.${VERSION}.rff"
-        ["human"]="Homo_sapiens.GRCh38.${VERSION}.rff"
-        ["rat"]="Rattus_norvegicus.Rnor_6.0.${VERSION}.rff"
-)
 
 function download_from_ensembl {
     local FILE=$1
@@ -75,13 +70,24 @@ function get_gtf_file {
     local VERSION=$2
 
     local scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
-    local assembly=${ASSEMBLY["$SPECIES"]}
+
 
     if [ "${SPECIES}" == "castaneus" ] ; then
         VERSION=86
     fi
 
     echo ${scientific_name^}.${assembly}.${VERSION}.gtf
+}
+
+function get_rff_file {
+    local SPECIES=$1
+    local VERSION=$2
+
+    local scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
+    local assembly=${ASSEMBLY["$SPECIES"]}
+
+
+    echo ${scientific_name^}.${assembly}.${VERSION}.rff
 }
 
 function get_gene_database {
@@ -229,16 +235,17 @@ function download_transcript_tb {
 }
 
 
-function download_picard_refFlat  {
+function generate_picard_refFlat  {
     local PICARD_DATA_DIR=$1
     local SPECIES=$2
-    local gtf_file=$3
+    local VERSION=$3
+    local GTF_FILE=$4
 
-    local ref_flat=${PICARD_DATA_DIR}/${RFF_FILES["$SPECIES"]}
+    local ref_flat=`get_rff_file ${SPECIES} ${VERSION}`
+
     mkdir -p ${PICARD_DATA_DIR}
 
-    gtfToGenePred -genePredExt -geneNameAsName2 ${gtf_file} ${PICARD_DATA_DIR}/refFlat.tmp.txt
-    paste <(cut -f 12 ${PICARD_DATA_DIR}/refFlat.tmp.txt) <(cut -f 1-10 ${PICARD_DATA_DIR}/refFlat.tmp.txt) > ${ref_flat}
+    gtfToGenePred -genePredExt -geneNameAsName2 ${GTF_FILE} ${PICARD_DATA_DIR}/refFlat.tmp.txt
+    paste <(cut -f 12 ${PICARD_DATA_DIR}/refFlat.tmp.txt) <(cut -f 1-10 ${PICARD_DATA_DIR}/refFlat.tmp.txt) > ${PICARD_DATA_DIR}/${ref_flat}
     rm ${PICARD_DATA_DIR}/refFlat.tmp.txt
-
 }
