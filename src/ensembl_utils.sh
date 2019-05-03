@@ -172,7 +172,7 @@ function query_biomart {
     query="http://${biomart_url}/biomart/martservice?query="$(echo $query | tr -d '\n')
 
     if [ "${HEADER}" = true ] ; then
-        echo ${header}
+        echo "${header}"
     fi
 
     if [ "${PEEK}" = true ] ; then
