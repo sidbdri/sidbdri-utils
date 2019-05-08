@@ -70,13 +70,24 @@ function get_gtf_file {
     local VERSION=$2
 
     local scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
-    local assembly=${ASSEMBLY["$SPECIES"]}
+
 
     if [ "${SPECIES}" == "castaneus" ] ; then
         VERSION=86
     fi
 
     echo ${scientific_name^}.${assembly}.${VERSION}.gtf
+}
+
+function get_rff_file {
+    local SPECIES=$1
+    local VERSION=$2
+
+    local scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
+    local assembly=${ASSEMBLY["$SPECIES"]}
+
+
+    echo ${scientific_name^}.${assembly}.${VERSION}.rff
 }
 
 function get_gene_database {
@@ -161,7 +172,7 @@ function query_biomart {
     query="http://${biomart_url}/biomart/martservice?query="$(echo $query | tr -d '\n')
 
     if [ "${HEADER}" = true ] ; then
-        echo ${header}
+        echo "${header}"
     fi
 
     if [ "${PEEK}" = true ] ; then
@@ -221,4 +232,20 @@ function download_transcript_tb {
     # filter out non-primary chromosomes
     query_biomart ${VERSION} "${query}" false false | \
     awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($4==a[$4]) print $0}' <( get_primary_chromosomes ${SPECIES} ${VERSION} ) -
+}
+
+
+function generate_picard_refFlat  {
+    local PICARD_DATA_DIR=$1
+    local SPECIES=$2
+    local VERSION=$3
+    local GTF_FILE=$4
+
+    local ref_flat=`get_rff_file ${SPECIES} ${VERSION}`
+
+    mkdir -p ${PICARD_DATA_DIR}
+
+    gtfToGenePred -genePredExt -geneNameAsName2 ${GTF_FILE} ${PICARD_DATA_DIR}/refFlat.tmp.txt
+    paste <(cut -f 12 ${PICARD_DATA_DIR}/refFlat.tmp.txt) <(cut -f 1-10 ${PICARD_DATA_DIR}/refFlat.tmp.txt) > ${PICARD_DATA_DIR}/${ref_flat}
+    rm ${PICARD_DATA_DIR}/refFlat.tmp.txt
 }
