@@ -39,6 +39,7 @@ source "${BASE_DIR}/../includes.sh"
 STAR_VERSIONS=(
     "STAR2.5.3a"
     "STAR2.6.1d"
+    "STAR2.7.0f"
 )
 
 KALLISTO_VERSIONS=(
