@@ -170,11 +170,11 @@ download_gene_tb ${SPECIES} ${VERSION} > genes.tsv
 download_transcript_tb ${SPECIES} ${VERSION} > transcripts.tsv
 
 if [[ "${SPECIES}" != "mouse" ]]; then
-    download_orthologs mouse ${SPECIES} ${VERSION}
+    download_orthologs ${SPECIES} mouse ${VERSION} > mouse_orthologs.tsv
 fi
 
 if [[ "${SPECIES}" != "human" ]]; then
-    download_orthologs human ${SPECIES} ${VERSION}
+    download_orthologs ${SPECIES} human ${VERSION} > human_orthologs.tsv
 fi
 
 # Generating refFlat file for Picard RNA-seq metrics
