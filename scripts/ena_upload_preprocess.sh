@@ -63,8 +63,8 @@ Usage:
   $(basename $0)
         -i input folder which contains the sample folders
         -o output folder which will contain the read files for upload
-        -s space separated sample names to be included. (default: all samples
-        in input folder)
+        -s space separated sample names to be included, e.g. "1N1 1N2 1N3" 
+        (default: all samples in input folder)
         -1 pattern for read 1 files. (default: "*_1.fastq.gz")
         -2 pattern for read 1 files. (default: "*_2.fastq.gz")
         -p number of cores. (default: 1)

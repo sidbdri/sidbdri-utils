@@ -39,6 +39,7 @@ source "${BASE_DIR}/../includes.sh"
 STAR_VERSIONS=(
     "STAR2.5.3a"
     "STAR2.6.1d"
+    "STAR2.7.0f"
 )
 
 KALLISTO_VERSIONS=(
@@ -122,7 +123,7 @@ do
 
     mkdir -p ${salmon_index_dir}
 
-    salmon index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
+    ${salmon} index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
     echo "Salmon index created with $(salmon --version 2>&1)." >> README
 done
 
@@ -136,7 +137,7 @@ do
 
     mkdir -p ${kallisto_index_dir}
 
-    kallisto index -i ${kallisto_index_dir}/kallisto_index ${transcripts_fasta}
+    ${kallisto} index -i ${kallisto_index_dir}/kallisto_index ${transcripts_fasta}
     echo "Kallisto index created with $(kallisto --version 2>&1)." >> README
 done
 
@@ -170,11 +171,11 @@ download_gene_tb ${SPECIES} ${VERSION} > genes.tsv
 download_transcript_tb ${SPECIES} ${VERSION} > transcripts.tsv
 
 if [[ "${SPECIES}" != "mouse" ]]; then
-    download_orthologs mouse ${SPECIES} ${VERSION}
+    download_orthologs ${SPECIES} mouse ${VERSION} > mouse_orthologs.tsv
 fi
 
 if [[ "${SPECIES}" != "human" ]]; then
-    download_orthologs human ${SPECIES} ${VERSION}
+    download_orthologs ${SPECIES} human ${VERSION} > human_orthologs.tsv
 fi
 
 # Generating refFlat file for Picard RNA-seq metrics
