@@ -107,7 +107,7 @@ do
 done
 
 rm -rf STAR_indices/${assembly_type}
-ln -s STAR_indices/${assembly_type}_${STAR_VERSIONS[-1]} STAR_indices/${assembly_type}
+ln -s ${OUTPUT_DIR}/STAR_indices/${assembly_type}_${STAR_VERSIONS[-1]#STAR} STAR_indices/${assembly_type}
 
 # Create Salmon and Kallisto indexes
 transcripts_ref=transcripts_ref/transcripts
@@ -127,7 +127,7 @@ do
 done
 
 rm -rf SALMON_indices/${assembly_type}
-ln -s SALMON_indices/${assembly_type}_${SALMON_VERSIONS[-1]} SALMON_indices/${assembly_type}
+ln -s ${OUTPUT_DIR}/SALMON_indices/${assembly_type}_${SALMON_VERSIONS[-1]#salmon} SALMON_indices/${assembly_type}
 
 for kallisto in ${KALLISTO_VERSIONS[@]}
 do
@@ -141,7 +141,7 @@ do
 done
 
 rm -rf KALLISTO_indices/${assembly_type}
-ln -s KALLISTO_indices/${assembly_type}_${KALLISTO_VERSIONS[-1]}/kallisto_index KALLISTO_indices/${assembly_type}
+ln -s ${OUTPUT_DIR}/KALLISTO_indices/${assembly_type}_${KALLISTO_VERSIONS[-1]#kallisto}/kallisto_index KALLISTO_indices/${assembly_type}
 
 # Create Bowtie indexes
 
@@ -157,7 +157,7 @@ do
 done
 
 rm -rf BOWTIE2_indices/${assembly_type}
-ln -s BOWTIE2_indices/${assembly_type}_${BOWTIE2_VERSIONS[-1]} BOWTIE2_indices/${assembly_type}
+ln -s ${OUTPUT_DIR}/BOWTIE2_indices/${assembly_type}_${BOWTIE2_VERSIONS[-1]#bowtie2-} BOWTIE2_indices/${assembly_type}
 
 # Create Bisulfite index
 bismark_genome_preparation --bowtie2 --parallel ${NUM_THREADS} .
