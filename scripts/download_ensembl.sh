@@ -163,9 +163,6 @@ ln -s ${OUTPUT_DIR}/BOWTIE2_indices/${assembly_type}_${BOWTIE2_VERSIONS[-1]#bowt
 # Create Bisulfite index
 bismark_genome_preparation --bowtie2 --parallel ${NUM_THREADS} .
 
-
-
-
 # Download gene and ortholog information
 download_gene_tb ${SPECIES} ${VERSION} > genes.tsv
 download_transcript_tb ${SPECIES} ${VERSION} > transcripts.tsv
@@ -180,4 +177,4 @@ fi
 
 # Generating refFlat file for Picard RNA-seq metrics
 mkdir -p picard
-download_picard_refFlat picard ${SPECIES} ${VERSION} ${gtf_file}
+generate_picard_refFlat picard ${SPECIES} ${VERSION} ${gtf_file}
