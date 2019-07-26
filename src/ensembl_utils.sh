@@ -192,6 +192,12 @@ function download_gene_tb {
     local gene_database=`get_gene_database ${scientific_name}`
     local assembly_type=`get_assembly_type ${SPECIES}`
 
+    #in version 96, entrezgene attribute is changed to entrezgene_id
+    entrezgene_str=entrezgene
+    if [ ${VERSION} -ge 96 ];then
+        entrezgene_str=entrezgene_id
+    fi
+
     query=`echo '<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Query>
 <Query  virtualSchemaName = "default" formatter = "TSV" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" >
@@ -200,13 +206,13 @@ function download_gene_tb {
 		<Attribute name = "description" />
 		<Attribute name = "chromosome_name" />
 		<Attribute name = "external_gene_name" />
-		<Attribute name = "entrezgene_id" />
+		<Attribute name = "entrezgene_str" />
 		<Attribute name = "gene_biotype" />
 </Dataset>
 </Query>
-' |  sed "s/gene_database/${gene_database}/"`
+' |  sed "s/gene_database/${gene_database}/" | sed "s/entrezgene_str/${entrezgene_str}/"`
 
-    # filter out non-primary chromosomes
+#     filter out non-primary chromosomes
     query_biomart ${VERSION} "${query}" false false | \
     awk -F'\t' 'NR==FNR {a[$0]=$0} NR>FNR {if($3==a[$3]) print $0}' <( get_primary_chromosomes ${SPECIES} ${VERSION} ) -
 }
