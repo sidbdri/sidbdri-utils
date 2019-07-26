@@ -199,7 +199,7 @@ function download_gene_tb {
 		<Attribute name = "description" />
 		<Attribute name = "chromosome_name" />
 		<Attribute name = "external_gene_name" />
-		<Attribute name = "entrezgene" />
+		<Attribute name = "entrezgene_id" />
 		<Attribute name = "gene_biotype" />
 </Dataset>
 </Query>
