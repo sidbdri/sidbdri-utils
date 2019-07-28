@@ -194,7 +194,7 @@ function download_gene_tb {
 
     #in version 96, entrezgene attribute is changed to entrezgene_id
     entrezgene_str=entrezgene
-    if [ ${VERSION} -ge 96 ];then
+    if [ ${VERSION} -ge 97 ];then
         entrezgene_str=entrezgene_id
     fi
 
