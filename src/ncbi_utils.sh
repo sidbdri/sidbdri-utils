@@ -17,8 +17,7 @@ function download_srrs {
     local srrs="$@"
 
     for srr in ${srrs}; do
-                echo "download_srr ${out_dir} ${srr} && fastqc --outdir=${out_dir}/${srr} ${out_dir}/${srr}.fastq.gz 2>${out_dir}/${srr}.log"
-
+        echo "download_srr ${out_dir} ${srr} && fastqc --outdir=${out_dir}/${srr} ${out_dir}/${srr}/${srr}.fastq.gz 2>${out_dir}/${srr}/${srr}.log"
     done | xargs -t -n 1 -P ${nc} -I % bash -c "%"
 }
 
