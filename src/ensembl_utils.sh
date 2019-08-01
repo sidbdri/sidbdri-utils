@@ -22,6 +22,8 @@ declare -A ASSEMBLY=(
     ["cow"]="UMD3.1"
 )
 
+#check version/url here:
+# https://www.ensembl.org/info/website/archives/index.html
 declare -A BIOMART_URL=(
     ["97"]="jul2019.archive.ensembl.org/"
     ["96"]="apr2019.archive.ensembl.org"
