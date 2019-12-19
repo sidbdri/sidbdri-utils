@@ -181,6 +181,6 @@ generate_picard_refFlat picard ${SPECIES} ${VERSION} ${gtf_file}
 
 # Generating get_gene_lengths file
 echo "Running get_gene_lengths for species ...."
-get_gene_lengths <(tail -n +6 ${gtf_file} ) > ./gene_lengths.csv
+get_gene_lengths ${gtf_file} > ./gene_lengths.csv
 # Construct transcript->gene mapping file for tximport
 awk '$3=="transcript" {print $14, $10}' ${gtf_file} | sed 's/"//g;s/;//g' > ./tx2gene.tsv
