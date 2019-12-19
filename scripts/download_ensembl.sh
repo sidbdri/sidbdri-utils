@@ -1,7 +1,7 @@
 #!/bin/bash
 # Download and process data for a particular species from an Ensembl release, e.g.
 #
-# download_ensembl mouse 95 <your_email> /srv/data/ensembl
+# download_ensembl mouse 95 <your_email> /srv/data/genome/mouse/ensembl-95
 #
 # The script:
 # 1) Downloads top-level sequences for the species' genome in FASTA format
@@ -178,3 +178,9 @@ fi
 # Generating refFlat file for Picard RNA-seq metrics
 mkdir -p picard
 generate_picard_refFlat picard ${SPECIES} ${VERSION} ${gtf_file}
+
+# Generating get_gene_lengths file
+echo "Running get_gene_lengths for species ...."
+get_gene_lengths <(tail -n +6 ${gtf_file} ) > ./gene_lengths.csv
+# Construct transcript->gene mapping file for tximport
+awk '$3=="transcript" {print $14, $10}' ${gtf_file} | sed 's/"//g;s/;//g' > ./tx2gene.tsv
