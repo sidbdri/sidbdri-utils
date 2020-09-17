@@ -16,14 +16,33 @@
 # '<species>_orthologs.tsv'.
 
 
-set -o nounset
 set -o errexit
 
+while getopts ":s:v:e:o:" opt; do
+  case ${opt} in
+    s ) 
+	  SPECIES=$OPTARG
+      ;;
+    v ) 
+	  VERSION=$OPTARG
+      ;;
+    e ) 
+	  EMAIL=$OPTARG
+      ;;
+    o ) 
+	  OUTPUT_DIR=$OPTARG
+      ;;
+    \? ) echo "Usage: download_ensembl -s <species> -v <ensembl-version> -e <email> -o <output-dir>"
+	  exit
+      ;;
+  esac
+done
 
-SPECIES=$1
-VERSION=$2
-EMAIL=$3
-OUTPUT_DIR=$4
+if [ -z "$SPECIES" ] || [ -z "$VERSION" ] || [ -z "$EMAIL" ] || [ -z "$OUTPUT_DIR" ]; then 
+    echo "Usage: download_ensembl -s <species> -v <ensembl-version> -e <email> -o <output-dir>"
+    echo "All parameters are required."
+    exit
+fi
 
 function cleanup {
    echo "Killing all sub-processes..."
