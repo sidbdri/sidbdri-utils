@@ -13,7 +13,7 @@ declare -A SCIENTIFIC_NAME=(
 
 declare -A ASSEMBLY=(
     ["human"]="GRCh38"
-    ["mouse"]="GRCm38"
+    ["mouse"]="GRCm39"
     ["rat"]="Rnor_6.0"
     ["macaque"]="Mmul_8.0.1"
     ["chimpanzee"]="CHIMP2.1.4"
@@ -25,6 +25,7 @@ declare -A ASSEMBLY=(
 #check version/url here:
 # https://www.ensembl.org/info/website/archives/index.html
 declare -A BIOMART_URL=(
+    ["102"]="nov2020.archive.ensembl.org"
     ["101"]="aug2020.archive.ensembl.org"
     ["100"]="apr2020.archive.ensembl.org"
     ["99"]="jan2020.archive.ensembl.org/"
@@ -58,8 +59,13 @@ function download_from_ensembl {
 
 function get_assembly {
     local SPECIES=$1
+    local VERSION=$2
 
-    echo ${ASSEMBLY["$SPECIES"]}
+    if [ "${SPECIES}" == "mouse" ] && "${VERSION}" -le "102" ] ; then
+        echo "GRCh38"
+    else
+        echo ${ASSEMBLY["$SPECIES"]}
+    fi
 }
 
 
@@ -77,8 +83,8 @@ function get_gtf_file {
     local SPECIES=$1
     local VERSION=$2
 
-    local scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
-
+    local scientific_name=`get_scientific_name ${SPECIES}`
+    local assembly=`get_assembly ${SPECIES} ${VERSION}`
 
     if [ "${SPECIES}" == "castaneus" ] ; then
         VERSION=86
@@ -91,9 +97,8 @@ function get_rff_file {
     local SPECIES=$1
     local VERSION=$2
 
-    local scientific_name=${SCIENTIFIC_NAME["$SPECIES"]}
-    local assembly=${ASSEMBLY["$SPECIES"]}
-
+    local scientific_name=`get_scientific_name ${SPECIES}`
+    local assembly=`get_assembly ${SPECIES} ${VERSION}`
 
     echo ${scientific_name^}.${assembly}.${VERSION}.rff
 }

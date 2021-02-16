@@ -5,7 +5,7 @@ source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )/../includes.sh"
 set -o nounset
 set -o errexit
 
-get_assembly 'human'
+get_assembly 'human' '103'
 
 get_assembly_type 'huamn'
 
@@ -17,7 +17,7 @@ get_scientific_name 'human'
 
 get_biomart_url 95
 
-get_primary_chromesome human 95 | head -1
+get_primary_chromosomes human 95 | head -1
 
 download_orthologs human mouse 95 | head -1
 

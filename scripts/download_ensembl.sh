@@ -83,7 +83,7 @@ BOWTIE2_VERSIONS=(
 NUM_THREADS=16
 
 scientific_name=`get_scientific_name ${SPECIES}`
-assembly=`get_assembly ${SPECIES}`
+assembly=`get_assembly ${SPECIES} ${VERSION}`
 assembly_type=`get_assembly_type ${SPECIES}`
 biomart_url==`get_biomart_url ${VERSION}`
 gene_database=`get_gene_database ${scientific_name}`
