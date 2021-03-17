@@ -63,7 +63,7 @@ function get_assembly {
     local VERSION=$2
 
     if [ "${SPECIES}" == "mouse" ] && [ "${VERSION}" -le "102" ] ; then
-        echo "GRCh38"
+        echo "GRCm38"
     else
         echo ${ASSEMBLY["$SPECIES"]}
     fi
