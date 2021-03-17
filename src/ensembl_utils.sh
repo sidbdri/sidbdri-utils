@@ -25,6 +25,7 @@ declare -A ASSEMBLY=(
 #check version/url here:
 # https://www.ensembl.org/info/website/archives/index.html
 declare -A BIOMART_URL=(
+    ["103"]="feb2021.archive.ensembl.org"
     ["102"]="nov2020.archive.ensembl.org"
     ["101"]="aug2020.archive.ensembl.org"
     ["100"]="apr2020.archive.ensembl.org"
