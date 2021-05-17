@@ -143,7 +143,6 @@ do
     mkdir -p ${salmon_index_dir}
 
     ${salmon} index -p ${NUM_THREADS} -t ${transcripts_fasta} -i ${salmon_index_dir}
-    echo "Salmon index created with $(salmon --version 2>&1)." >> README
 done
 
 rm -rf SALMON_indices/${assembly_type}
@@ -157,7 +156,6 @@ do
     mkdir -p ${kallisto_index_dir}
 
     ${kallisto} index -i ${kallisto_index_dir}/kallisto_index ${transcripts_fasta}
-    echo "Kallisto index created with $(kallisto --version 2>&1)." >> README
 done
 
 rm -rf KALLISTO_indices/${assembly_type}
