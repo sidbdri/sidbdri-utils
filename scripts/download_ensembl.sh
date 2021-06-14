@@ -201,3 +201,6 @@ echo "Running get_gene_lengths for species ...."
 get_gene_lengths ${gtf_file} > ./gene_lengths.csv
 # Construct transcript->gene mapping file for tximport
 awk '$3=="transcript" {print $14, $10}' ${gtf_file} | sed 's/"//g;s/;//g' > ./tx2gene.tsv
+
+# We generate the species specific gene set
+Rscript ${BASE_DIR}/../src/create_gene_set_mapping.R ${SPECIES} ${VERSION} ${OUTPUT_DIR}
