@@ -34,10 +34,10 @@ function usage {
 
     Given how the data is structured on sidb, here is a example workflow:
         >cd /srv/data/fastq_temp
-        # we copy the project folder containing all the sample .fastq.gz files
+        # we copy the project folder containing all the sample .fastq.gz files as test
         >cp -R /srv/data/ghardingham/nrf2_ich_jloan /srv/data/fastq_temp/
         >cd /srv/data/fastq_temp/nrf2_ich_jloan
-        >bash genozip.sh -d "/srv/data/fastq_temp/nrf2_ich_jloan" -p 10
+        >bash genozip.sh -d "/srv/data/fastq_temp/nrf2_ich_jloan" -p 16
 
     Here is an example output of the script with only two samples of the nrf2_ich_jloan project:
         >bash genozip.sh -d "/srv/data/fastq_temp/nrf2_ich_jloan"
@@ -123,10 +123,10 @@ function usage {
       $(basename $0)
             -d folder which contains the sample folders
             -f genozip will overwrite existing genozip file without warning
-            -p number of cores. default: 10
+            -p number of cores. default: 16
             -h see help page
     Example:
-        bash /home/xinhe/Projects/sidbdri-utils/scripts/genozip.sh -d "/srv/data/fastq_temp/nrf2_ich_jloan" -p 10
+        bash /home/xinhe/Projects/sidbdri-utils/scripts/genozip.sh -d "/srv/data/fastq_temp/nrf2_ich_jloan" -p 16
 
 EOT
 }
@@ -208,7 +208,7 @@ size_before_compress=`du -h -d 1 . | tail -n -1 | cut -f 1`
 echo "Compressing with genozip..."
 for file in `find ${SAMPLE_DIR} -type f -name "*.fastq.gz"`; do
     echo "genozip_fastqgz ${file} ${OVERWRITE_EXISTING}"
-done | xargs -t -n 1 -P 10 -I % bash -c "%"
+done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
 
 
 echo "Each sample should have a .fastq and .genozip.fastq file generated."
@@ -256,6 +256,6 @@ find ${SAMPLE_DIR} -type f -name "*.fastq" | sort | xargs -P ${NUM_CORES} -n 1 -
 
 size_after_compress=`du -h -d 1 . | tail -n -1 | cut -f 1`
 
-echo "Script finished. Size reduced from ${size_before_compress} to ${size_after_compress}"
+echo "Script finished. Disk usage from ${size_before_compress} --> ${size_after_compress}"
 
 #find /srv/data/ghardingham/nrf2_ich_jloan -type d | tail -n +2 | xargs -P 31 -n 1 -t -I % bash -c "cp -R % ."
