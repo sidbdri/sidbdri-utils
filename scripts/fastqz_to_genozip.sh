@@ -28,6 +28,7 @@ function usage {
         5. check if every md5sum appear exactly twice
         6. delete all the fastq.gz files
         7. delete all the fastq files
+        8. change the owner group of all files in the give folder to sidbdri
 
     This script is to be run manually as it requires user input to confirm the action in step 1,6 and 7.
     User should take EXTRA CARE when confirming at step 6 and 7 to make sure the script is deleting the correct files.
@@ -139,11 +140,11 @@ function genozip_fastqgz {
     local para=''
     [[ "${force}" == "true" ]] && para='-f'
 
-    para=${para}" --quiet"
+    para=${para}" --quiet "
 
     if [  -f "${file}" ]; then
         # extract the fastq.gz to calculate its md5 hash
-        gunzip --quiet --keep ${para} ${file}
+        gunzip --quiet --keep ${file}
         # genozip the fastq.gz file
         genozip ${para} ${file}
         # after compress with genozip, we uncompress it to check its md5 hash to make sure it is the same as the original one
@@ -190,6 +191,7 @@ function confirm {
 [[ ! "${SAMPLE_DIR}" =~ ^/srv/data/.* ]] && echo "Error: Sampe DIR can only be under /srv/data/" && exit 1
 [[ ! -d "${SAMPLE_DIR}"  ]] && echo "Error: SAMPLE_DIR <${SAMPLE_DIR}> does not exist." && usage && exit 1
 
+echo ""
 echo "Sample folder is set to: ${SAMPLE_DIR}"
 [[ "${OVERWRITE_EXISTING}" == "true" ]] && echo "genozip overwrite is enable. genozip will overwrite existing .genozip."
 
@@ -210,7 +212,7 @@ for file in `find ${SAMPLE_DIR} -type f -name "*.fastq.gz"`; do
     echo "genozip_fastqgz ${file} ${OVERWRITE_EXISTING}"
 done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
 
-
+echo ""
 echo "Each sample should have a .fastq and .genozip.fastq file generated."
 echo "The .fastq file is uncompress from the original .fastq.gz file."
 echo "The .genozip.fastq file is uncompress from the .genozip file."
@@ -233,7 +235,7 @@ else
 fi
 
 
-
+echo ""
 echo "Deleting the original fastq.gz file:"
 echo "--------------------------"
 find ${SAMPLE_DIR} -type f -name "*.fastq.gz" | sort
@@ -241,9 +243,11 @@ echo "--------------------------"
 confirm "Please check the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
 confirm "Please **DOUBLE CHECK** the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
 
+echo ""
 echo "Deleting the original fastq.gz file..."
 find ${SAMPLE_DIR} -type f -name "*.fastq.gz" | sort | xargs -P ${NUM_CORES} -n 1 -t rm
 
+echo ""
 echo "Deleting all fastq (original/genozip) file:"
 echo "--------------------------"
 find ${SAMPLE_DIR} -type f -name "*.fastq" | sort
@@ -251,10 +255,14 @@ echo "--------------------------"
 confirm "Please check the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
 confirm "Please **DOUBLE CHECK** the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
 
+echo ""
 echo "Deleting all fastq (original/genozip) file..."
 find ${SAMPLE_DIR} -type f -name "*.fastq" | sort | xargs -P ${NUM_CORES} -n 1 -t rm
 
 size_after_compress=`du -h -d 1 . | tail -n -1 | cut -f 1`
+
+echo "Chnaging file group to sidbdri..."
+chgrp -Rf sidbdri "${SAMPLE_DIR}"
 
 echo "Script finished. Disk usage from ${size_before_compress} --> ${size_after_compress}"
 
