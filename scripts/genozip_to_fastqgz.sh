@@ -60,7 +60,7 @@ function usage {
             -p number of cores. default: 16
             -h see help page
     Example:
-        bash prepare_fastq_from_genozip.sh -i /srv/data/fastq_temp/nrf2_ich_jloan -f -p 10
+        bash genozip_to_fastqgz.sh -d /srv/data/fastq_temp/nrf2_ich_jloan -f -p 10
 
 EOT
 }
