@@ -21,6 +21,9 @@ function usage {
     This script creates, for every .genozip file in a specific folder, its corresponding .fastq.gz file.
     It is a 'reverse' of the fastqz_to_genozip.sh script.
 
+    User should MAKE SURE the script run successfully to the end. The compress/uncompress process is not 'atomic'.
+    Thus the script terminates when a file is being compress/uncompress, it will leave a half complete file in the folder.
+
     Here is a brief summary of how it works:
     For a given folder contains all the sample folders, the script
         1. check if every .genozip files in the given folder has a corresponding .fastq.gz file
@@ -100,6 +103,15 @@ done
 [[ ! "${SAMPLE_DIR}" =~ ^/srv/data/.* ]] && echo "Error: GENOZIP_DATA_DIR can only be under /srv/data/" && exit 1
 [[ ! -d "${SAMPLE_DIR}"  ]] && echo "Error: SAMPLE_DIR <${SAMPLE_DIR}> does not exist. " && usage && exit 1
 
+
+echo ""
+echo "Checking if .genozip exist... "
+if [[ -z `find ${SAMPLE_DIR} -type f -name "*.genozip" -print -quit` ]]; then
+    echo 'Cannot find any .genozip file in ${SAMPLE_DIR}. Script finished.'
+else
+    echo 'Found .genozip...'
+    echo "Script will continue assuming the samples are genozipped already using the script fastqz_to_genozip.sh..."
+fi
 
 
 FILES_TO_UNCOMPRESS=()

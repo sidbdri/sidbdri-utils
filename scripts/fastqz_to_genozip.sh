@@ -32,6 +32,9 @@ function usage {
 
     This script is to be run manually as it requires user input to confirm the action in step 1,6 and 7.
     User should take EXTRA CARE when confirming at step 6 and 7 to make sure the script is deleting the correct files.
+    User should MAKE SURE the script run successfully to the end. The compress/uncompress process is not 'atomic'.
+    Thus the script terminates when a file is being compress/uncompress, it will leave a half complete file in the folder.
+
 
     Given how the data is structured on sidb, here is a example workflow:
         >cd /srv/data/fastq_temp
