@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -o errexit
+
+USAGE="Usage: prepare_de_results -r <results-dir> -o <output-name>"
+
+while getopts ":r:o:" opt; do
+    case ${opt} in
+        r )
+            RESULTS_DIR=$OPTARG
+            ;;
+        o )
+            OUTPUT_NAME=$OPTARG
+            ;;
+        \? ) echo $USAGE
+            exit
+            ;;
+    esac
+done
+
+if [ -z "$RESULTS_DIR" ] || [ -z "$OUTPUT_NAME" ]; then
+    echo $USAGE
+    exit
+fi
+
+OUTPUT_DIR=~/tmp/$OUTPUT_NAME
+mkdir $OUTPUT_DIR
+
+cp $RESULTS_DIR/multiqc_report.html $OUTPUT_DIR
+cp $RESULTS_DIR/sessionInfo.txt $OUTPUT_DIR
+cp -r $RESULTS_DIR/differential_expression $OUTPUT_DIR
+
+mv $OUTPUT_DIR/differential_expression/graphs $OUTPUT_DIR
+
+find $OUTPUT_DIR -name "*count*.csv" -exec rm {} \;
+find $OUTPUT_DIR -name "*genes_in_sets*.csv" -exec rm {} \;
+
+cd ~/tmp
+tar cvfz ${OUTPUT_NAME}.tar.gz ${OUTPUT_NAME}
