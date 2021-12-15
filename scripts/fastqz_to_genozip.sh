@@ -128,6 +128,7 @@ function usage {
             -d folder which contains the sample folders
             -f genozip will overwrite existing genozip file without warning
             -p number of cores. default: 16
+            -y disable user input so the script can run programmatically. ** use with caution as script will detele files without asking the user to confirm it.**
             -h see help page
     Example:
         bash /home/xinhe/Projects/sidbdri-utils/scripts/fastqz_to_genozip.sh -d "/srv/data/fastq_temp/nrf2_ich_jloan" -p 16
@@ -164,13 +165,15 @@ SAMPLE_DIR=''
 NUM_CORES=16
 CURRENT_DIR=`pwd`
 OVERWRITE_EXISTING=false
+ENABLE_USER_INPUT=true
 
 ## read parameter
-while getopts 'd:p:f' opt; do
+while getopts 'd:p:fy' opt; do
   case ${opt} in
     d)  SAMPLE_DIR=${OPTARG}    ;;
     p)  NUM_CORES=${OPTARG}     ;;
     f)  OVERWRITE_EXISTING="true"   ;;
+    y)  ENABLE_USER_INPUT="false"   ;;
     *)  usage; exit         ;;
   esac
 done
@@ -206,7 +209,7 @@ echo "--------------------------"
 find ${SAMPLE_DIR} -type f -name "*.fastq.gz" | sort
 echo "--------------------------"
 
-confirm
+[[ "${ENABLE_USER_INPUT}" == "true" ]] && confirm
 
 size_before_compress=`du -h -d 1 . | tail -n -1 | cut -f 1`
 
@@ -243,8 +246,8 @@ echo "Deleting the original fastq.gz file:"
 echo "--------------------------"
 find ${SAMPLE_DIR} -type f -name "*.fastq.gz" | sort
 echo "--------------------------"
-confirm "Please check the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
-confirm "Please **DOUBLE CHECK** the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
+[[ "${ENABLE_USER_INPUT}" == "true" ]] && confirm "Please check the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
+[[ "${ENABLE_USER_INPUT}" == "true" ]] && confirm "Please **DOUBLE CHECK** the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
 
 echo ""
 echo "Deleting the original fastq.gz file..."
@@ -255,8 +258,8 @@ echo "Deleting all fastq (original/genozip) file:"
 echo "--------------------------"
 find ${SAMPLE_DIR} -type f -name "*.fastq" | sort
 echo "--------------------------"
-confirm "Please check the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
-confirm "Please **DOUBLE CHECK** the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
+[[ "${ENABLE_USER_INPUT}" == "true" ]] && confirm "Please check the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
+[[ "${ENABLE_USER_INPUT}" == "true" ]] && confirm "Please **DOUBLE CHECK** the files to be deleted!!!!! The delete action is **NON-RECOVERABLE**!!! Do you wish to continue?"
 
 echo ""
 echo "Deleting all fastq (original/genozip) file..."
