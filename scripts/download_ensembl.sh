@@ -56,9 +56,8 @@ BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 source "${BASE_DIR}/../includes.sh"
 
 STAR_VERSIONS=(
-    "STAR2.5.3a"
-    "STAR2.6.1d"
     "STAR2.7.0f"
+    "STAR2.7.9a"
 )
 
 KALLISTO_VERSIONS=(
@@ -74,8 +73,8 @@ SALMON_VERSIONS=(
 )
 
 BOWTIE2_VERSIONS=(
-    "bowtie2-2.3.4"
     "bowtie2-2.3.4.3"
+    "bowtie2-2.4.4"
 )
 
 
