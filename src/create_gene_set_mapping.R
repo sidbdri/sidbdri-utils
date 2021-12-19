@@ -12,13 +12,10 @@ if (length(args)!=3) {
 }
 
 SPECIES <- args[1]
-ENSMEBL_VERSION <- args[2]
+ENSEMBL_VERSION <- args[2]
 OUT_DIR <- args[3]
 
-SPECIES='mouse'
-ENSMEBL_VERSION='100'
-
-root<-str_c('/srv/data/genome/', SPECIES, '/ensembl-',ENSMEBL_VERSION,'/')
+root<-str_c('/srv/data/genome/', SPECIES, '/ensembl-',ENSEMBL_VERSION,'/')
 msigdb_path <- '/srv/data/genome/human/msigdb/v7.0'
 out_dir <- file.path(OUT_DIR,'msigdb','v7.0')
 if (!dir.exists(out_dir)) {
@@ -59,7 +56,7 @@ get_gene_sets <- function(species, gene_set_name) {
 
 get_human_vs_species_ortholog_info <- function(species) {
     orthologs <- species %>%
-        str_c("/srv/data/genome/", ., "/ensembl-",ENSMEBL_VERSION,"/human_orthologs.tsv") %>%
+        str_c("/srv/data/genome/", ., "/ensembl-",ENSEMBL_VERSION,"/human_orthologs.tsv") %>%
         read_tsv(col_names = c("species_gene", "human_gene", "type"))
 
     species_genes <- get_gene_info(species)
@@ -97,7 +94,7 @@ get_human_vs_species_ortholog_info <- function(species) {
 
 get_gene_info <- function(species) {
     species %>%
-        str_c("/srv/data/genome/", ., "/ensembl-",ENSMEBL_VERSION,"/genes.tsv") %>%
+        str_c("/srv/data/genome/", ., "/ensembl-",ENSEMBL_VERSION,"/genes.tsv") %>%
         read_tsv(col_names = c("gene", "description", "chromosome", "gene_name", "entrez_id", "gene_type"),
         col_types = list(chromosome = col_character())) %>%
         group_by(gene) %>%
@@ -109,7 +106,7 @@ get_gene_info <- function(species) {
 
 
 
-gene_set_categories <- list("CURATED", "MOTIF", "GO")
+gene_set_categories <- list("CURATED", "MOTIF", "GO", "CELL_TYPE")
 
 gene_set_categories %>%
     set_names(.) %>%
