@@ -50,7 +50,7 @@ get_gene_sets <- function(species, gene_set_name) {
     }
 
 
-    save('ret',file = file.path(out_dir,str_c(gene_set_name,'.all.v7.0.entrez.gmt.Rdata')) )
+    saveRDS(ret,file = file.path(out_dir,str_c(gene_set_name,'.all.v7.0.entrez.gmt.Rdata')) )
 }
 
 
@@ -76,12 +76,12 @@ get_human_vs_species_ortholog_info <- function(species) {
     same_name_entrez <- (species_genes %>%
         mutate(gene_name = tolower(gene_name)) %>%
         dplyr::select(gene_name, entrez_id) %>%
-        filter(!is.na(entrez_id)) %>%
+        filter(!is.na(entrez_id) & !is.na(gene_name)) %>%
         dplyr::rename(species_entrez_id = entrez_id)) %>%
         inner_join(human_genes %>%
             mutate(gene_name = tolower(gene_name)) %>%
             dplyr::select(gene_name, entrez_id) %>%
-            filter(!is.na(entrez_id)) %>%
+            filter(!is.na(entrez_id) & !is.na(gene_name)) %>%
             dplyr::rename(human_entrez_id = entrez_id)) %>%
         dplyr::select(-gene_name) %>%
         distinct()
