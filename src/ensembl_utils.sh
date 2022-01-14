@@ -14,7 +14,7 @@ declare -A SCIENTIFIC_NAME=(
 declare -A ASSEMBLY=(
     ["human"]="GRCh38"
     ["mouse"]="GRCm39"
-    ["rat"]="Rnor_6.0"
+    ["rat"]="mRatBN7.2"
     ["macaque"]="Mmul_8.0.1"
     ["chimpanzee"]="CHIMP2.1.4"
     ["castaneus"]="CAST_EiJ_v1"
@@ -25,7 +25,7 @@ declare -A ASSEMBLY=(
 #check version/url here:
 # https://www.ensembl.org/info/website/archives/index.html
 declare -A BIOMART_URL=(
-    ["105"]="dec2021.archive.ensembl.org/"
+    ["105"]="dec2021.archive.ensembl.org"
     ["104"]="may2021.archive.ensembl.org"
     ["103"]="feb2021.archive.ensembl.org"
     ["102"]="nov2020.archive.ensembl.org"
@@ -66,6 +66,8 @@ function get_assembly {
 
     if [ "${SPECIES}" == "mouse" ] && [ "${VERSION}" -le "102" ] ; then
         echo "GRCm38"
+    elif [ "${SPECIES}" == "rat" ] && [ "${VERSION}" -le "104" ] ; then
+        echo "Rnor_6.0"
     else
         echo ${ASSEMBLY["$SPECIES"]}
     fi
