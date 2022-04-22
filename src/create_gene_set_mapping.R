@@ -16,15 +16,15 @@ ENSEMBL_VERSION <- args[2]
 OUT_DIR <- args[3]
 
 root<-str_c('/srv/data/genome/', SPECIES, '/ensembl-',ENSEMBL_VERSION,'/')
-msigdb_path <- '/srv/data/genome/human/msigdb/v7.0'
-out_dir <- file.path(OUT_DIR,'msigdb','v7.0')
+msigdb_path <- '/srv/data/genome/human/msigdb/v7.5.1'
+out_dir <- file.path(OUT_DIR,'msigdb','v7.5.1')
 if (!dir.exists(out_dir)) {
     dir.create(out_dir, recursive = TRUE)
 }
 
 
 get_gene_sets <- function(species, gene_set_name) {
-    msigdb_data <- file.path(msigdb_path,str_c(gene_set_name,'.all.v7.0.entrez.gmt')) %>%
+    msigdb_data <- file.path(msigdb_path,str_c(gene_set_name,'.all.v7.5.1.entrez.gmt')) %>%
     read_lines()
 
     gene_set_names <- map_chr(msigdb_data, function(x) {str_split(x, "\t")[[1]][1]})
@@ -50,7 +50,7 @@ get_gene_sets <- function(species, gene_set_name) {
     }
 
 
-    saveRDS(ret,file = file.path(out_dir,str_c(gene_set_name,'.all.v7.0.entrez.gmt.Rdata')) )
+    saveRDS(ret,file = file.path(out_dir,str_c(gene_set_name,'.all.v7.5.1.entrez.gmt.Rdata')) )
 }
 
 
@@ -106,7 +106,7 @@ get_gene_info <- function(species) {
 
 
 
-gene_set_categories <- list("CURATED", "MOTIF", "GO", "CELL_TYPE")
+gene_set_categories <- list("CURATED", "MOTIF", "GO", "CELL_TYPE", "MSIGDB_CELL_TYPE")
 
 gene_set_categories %>%
     set_names(.) %>%
