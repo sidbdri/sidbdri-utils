@@ -11,7 +11,7 @@ The script:
 (primary assembly sequences for human and mouse),
 2) Downloads gene annotations in GTF format,
 3) Creates a genome index for the STAR mapping tool,
-4) Builds Salmon and Kallisto indexes for the transcripts defined in the GTF file,
+4) Builds Salmon indexes for the transcripts defined in the GTF file,
 5) Downloads gene information (gene id, name, chromosome, description, Entrez
 ID, gene biotype) into a file 'genes.tsv'. Only genes on primary assembly
 sequences are retained (i.e.  those on patch sequences are removed),
