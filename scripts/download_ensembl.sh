@@ -65,6 +65,7 @@ RSEM_VERSION=1.3.1
 SALMON_VERSIONS=(
     "salmon0.8.2"
     "salmon0.12.0"
+    "salmon1.8.0"
 )
 
 BOWTIE2_VERSIONS=(
