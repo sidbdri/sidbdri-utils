@@ -60,16 +60,12 @@ STAR_VERSIONS=(
     "STAR2.7.9a"
 )
 
-KALLISTO_VERSIONS=(
-    "kallisto0.43.1"
-    "kallisto0.45.0"
-)
-
 RSEM_VERSION=1.3.1
 
 SALMON_VERSIONS=(
     "salmon0.8.2"
     "salmon0.12.0"
+    "salmon1.8.0"
 )
 
 BOWTIE2_VERSIONS=(
@@ -128,7 +124,7 @@ done
 rm -rf STAR_indices/${assembly_type}
 ln -s ${OUTPUT_DIR}/STAR_indices/${assembly_type}_${STAR_VERSIONS[-1]#STAR} STAR_indices/${assembly_type}
 
-# Create Salmon and Kallisto indexes
+# Create Salmon
 transcripts_ref=transcripts_ref/transcripts
 transcripts_fasta=${transcripts_ref}.transcripts.fa
 mkdir -p ${transcripts_ref}
@@ -147,18 +143,6 @@ done
 rm -rf SALMON_indices/${assembly_type}
 ln -s ${OUTPUT_DIR}/SALMON_indices/${assembly_type}_${SALMON_VERSIONS[-1]#salmon} SALMON_indices/${assembly_type}
 
-for kallisto in ${KALLISTO_VERSIONS[@]}
-do
-    kallisto_version="$(echo ${kallisto} | sed 's/kallisto//')"
-    kallisto_index_dir=KALLISTO_indices/${assembly_type}_${kallisto_version}
-
-    mkdir -p ${kallisto_index_dir}
-
-    ${kallisto} index -i ${kallisto_index_dir}/kallisto_index ${transcripts_fasta}
-done
-
-rm -rf KALLISTO_indices/${assembly_type}
-ln -s ${OUTPUT_DIR}/KALLISTO_indices/${assembly_type}_${KALLISTO_VERSIONS[-1]#kallisto}/kallisto_index KALLISTO_indices/${assembly_type}
 
 # Create Bowtie indexes
 
