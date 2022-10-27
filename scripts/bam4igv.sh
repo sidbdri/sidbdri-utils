@@ -23,6 +23,9 @@ Usage:
         - create hyper link to tmp folder specified by -t (default ~/tmp)
         - subset bam by location string specified by -l
         - if in single cell mode, further subset bam by barcode list specified by -B
+          If the barcode list is from cloupe browser export, the cell barcode will be
+          post-fix by a sample id (-1,-2,-3 etc ), in order to use this list to extract the reads from the bam file,
+          one needs to manual change all the sample id back to 1, i.e AAACGCTGTCCTACAA-1
         - A further merge(not included in the script) can be done by calling sambamba merge -t <bams> if needed
 
 Options:
