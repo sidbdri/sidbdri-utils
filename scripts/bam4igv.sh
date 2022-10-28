@@ -106,8 +106,10 @@ for bam in ${INPUT_BAM}; do
     echo "create link to orginal bam file at" ${OUT_DIR}/${bam_name}
     ln -sf ${bam} ${OUT_DIR}/${bam_name}
 
-    echo "create index for bam file " ${OUT_DIR}/${bam_name}
-    sambamba index -t ${NUM_CORES} ${OUT_DIR}/${bam_name} >/dev/null 2>&1
+    if [[ ! -e ${OUT_DIR}/${bam_name}.bai ]]; then
+        echo "create index for bam file " ${OUT_DIR}/${bam_name}
+        sambamba index -t ${NUM_CORES} ${OUT_DIR}/${bam_name} >/dev/null 2>&1
+    fi
 
     echo "subset read from location ${LOCATION_STRING} form bam file " ${OUT_DIR}/${bam_name}
     subset_bam_name=${LOCATION_STRING}_${bam_name}
