@@ -123,6 +123,7 @@ for bam in ${INPUT_BAM}; do
     echo -n  "subset read from location ${LOCATION_STRING} form bam file " ${OUT_DIR}/${bam_name}...
     subset_bam_name=${LOCATION_STRING}_${bam_name}
     samtools view -b ${OUT_DIR}/${bam_name} --threads 1 ${LOCATION_STRING} -o ${OUT_DIR}/${subset_bam_name}
+    samtools sort --threads ${NUM_CORES} -o ${OUT_DIR}/${subset_bam_name} ${OUT_DIR}/${subset_bam_name}
     samtools index -@ ${NUM_CORES} ${OUT_DIR}/${subset_bam_name}
     check_number_of_read ${OUT_DIR}/${subset_bam_name}
 
@@ -143,6 +144,7 @@ for bam in ${INPUT_BAM}; do
         subset-bam --cores ${NUM_CORES} --bam ${OUT_DIR}/${subset_bam_name} \
                 --cell-barcodes ${BARCODE_FILE} \
                 --out-bam ${OUT_DIR}/${subset_cell_bam_name}
+        samtools sort --threads ${NUM_CORES} -o ${OUT_DIR}/${subset_cell_bam_name} ${OUT_DIR}/${subset_cell_bam_name}
         samtools index -@ ${NUM_CORES} ${OUT_DIR}/${subset_cell_bam_name}
         check_number_of_read ${OUT_DIR}/${subset_cell_bam_name}
         echo "final output can be found at "${OUT_DIR}/${subset_cell_bam_name}
