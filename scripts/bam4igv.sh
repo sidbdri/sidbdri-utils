@@ -101,6 +101,15 @@ done
 [[ ! -d ${OUT_DIR} ]] && mkdir ${OUT_DIR}
 export TMPDIR=${OUT_DIR}
 
+function check_number_of_read {
+    local b=$1
+    local nor=`samtools view -c ${b}`
+    echo "Number of reads in bam: ${nor}."
+    if [[ $nor -lt 10 ]];then
+        echo '******Warning: less then 10 read in bam file!!!!*******'
+    fi
+}
+
 for bam in ${INPUT_BAM}; do
     bam_name=`basename ${bam}`
     echo "create link to orginal bam file at" ${OUT_DIR}/${bam_name}
@@ -108,16 +117,16 @@ for bam in ${INPUT_BAM}; do
 
     if [[ ! -e ${OUT_DIR}/${bam_name}.bai ]]; then
         echo "create index for bam file " ${OUT_DIR}/${bam_name}
-        sambamba index -t ${NUM_CORES} ${OUT_DIR}/${bam_name} >/dev/null 2>&1
+        samtools index -@ ${NUM_CORES} ${OUT_DIR}/${bam_name}
     fi
 
-    echo "subset read from location ${LOCATION_STRING} form bam file " ${OUT_DIR}/${bam_name}
+    echo -n  "subset read from location ${LOCATION_STRING} form bam file " ${OUT_DIR}/${bam_name}...
     subset_bam_name=${LOCATION_STRING}_${bam_name}
     samtools view -b ${OUT_DIR}/${bam_name} --threads 1 ${LOCATION_STRING} -o ${OUT_DIR}/${subset_bam_name}
-    sambamba index -t ${NUM_CORES} ${OUT_DIR}/${subset_bam_name} >/dev/null 2>&1
+    samtools index -@ ${NUM_CORES} ${OUT_DIR}/${subset_bam_name}
+    check_number_of_read ${OUT_DIR}/${subset_bam_name}
 
     if [[ ${BARCODE_FILE} != '' ]];then
-        echo "subset read from cell barcode list " ${BARCODE_FILE}
         subset_cell_name=$(basename ${BARCODE_FILE%.*})
         subset_cell_bam_name=${subset_cell_name}_${subset_bam_name}
 
@@ -130,10 +139,12 @@ for bam in ${INPUT_BAM}; do
                 rm -i ${OUT_DIR}/${subset_cell_bam_name}
             fi
         fi
+        echo -n "subset read from cell barcode list " ${BARCODE_FILE}...
         subset-bam --cores ${NUM_CORES} --bam ${OUT_DIR}/${subset_bam_name} \
                 --cell-barcodes ${BARCODE_FILE} \
                 --out-bam ${OUT_DIR}/${subset_cell_bam_name}
-        sambamba index -t ${NUM_CORES} ${OUT_DIR}/${subset_cell_bam_name} >/dev/null 2>&1
+        samtools index -@ ${NUM_CORES} ${OUT_DIR}/${subset_cell_bam_name}
+        check_number_of_read ${OUT_DIR}/${subset_cell_bam_name}
         echo "final output can be found at "${OUT_DIR}/${subset_cell_bam_name}
     else
         echo "final output can be found at "${OUT_DIR}/${subset_bam_name}
