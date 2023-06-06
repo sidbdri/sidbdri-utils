@@ -63,7 +63,8 @@ Usage:
   $(basename $0)
         -i input folder which contains the sample folders
         -o output folder which will contain the read files for upload
-        -s space separated sample names to be included, e.g. "1N1 1N2 1N3" 
+        -e the reads are single-end (default: false)
+        -s space separated sample names to be included, e.g. "1N1 1N2 1N3"
         (default: all samples in input folder)
         -1 pattern for read 1 files. (default: "*_1.fastq.gz")
         -2 pattern for read 1 files. (default: "*_2.fastq.gz")
@@ -81,8 +82,9 @@ READ1_IDENTIFIER="*_1.fastq.gz"
 READ2_IDENTIFIER="*_2.fastq.gz"
 NUM_CORES=1
 TEST_MODE=false
+IS_PAIR_END=true
 
-while getopts 'i:o:s:1:2:p:t' opt; do
+while getopts 'i:o:s:1:2:p:te' opt; do
   case ${opt} in
     i)  DATA_DIR=${OPTARG}    ;;
     o)  OUT_DIR=${OPTARG}    ;;
@@ -91,28 +93,44 @@ while getopts 'i:o:s:1:2:p:t' opt; do
     2)  READ2_IDENTIFIER=${OPTARG}            ;;
     p)  NUM_CORES=${OPTARG}            ;;
     t)  TEST_MODE=true      ;;
+    e)  IS_PAIR_END=false      ;;
     *)  usage; exit         ;;
   esac
 done
 
-if [ -z "${SAMPLE_NAMES}" ]; then
-    echo "-s is not set, using all sampleis found in ${DATA_DIR}."
-    SAMPLE_NAMES=`ls ${DATA_DIR}| grep -v .txt | paste -sd " " -`
-    echo ${SAMPLE_NAMES}
+if [ -z "$DATA_DIR" ]; then
+  >&2 echo "Input directory is not specified. Please provide the -i option." && exit 1
 fi
 
-FINAL_DIR=${OUT_DIR}/final
+if [ -z "$OUT_DIR" ]; then
+  >&2 echo "Output directory is not specified. Please provide the -o option." && exit 1
+fi
 
 # check data folder exists and is not empty
 if [  ! -d "${DATA_DIR}" ]; then
     >&2 echo "Error: data folder <${DATA_DIR}> does not exist." && exit 1
 fi
 
+if [ -z "${SAMPLE_NAMES}" ]; then
+    echo "-s is not set, using all samples found in ${DATA_DIR}."
+    SAMPLE_NAMES=`ls ${DATA_DIR}| grep -v .txt | paste -sd " " -`
+    echo ${SAMPLE_NAMES}
+fi
+
+FINAL_DIR=${OUT_DIR}/final
+
 # check all samples exist
 for sample in ${SAMPLE_NAMES}; do
     if [  ! -d "${DATA_DIR}/${sample}" ]; then
         >&2 echo "Error: sample folder <${DATA_DIR}/${sample}> does not exist." && exit 1
     fi
+done
+
+# check read_1/2 exist
+for sample in ${SAMPLE_NAMES}; do
+    echo "checing READ1/2_IDENTIFIER for ${sample}..."
+    read_1_files="$(ls ${DATA_DIR}/${sample}/${READ1_IDENTIFIER})"
+    read_2_files="$(ls ${DATA_DIR}/${sample} | grep -E ${READ1_IDENTIFIER})"
 done
 
 # check output folder does not exist
@@ -124,8 +142,9 @@ mkdir -p ${OUT_DIR} ${FINAL_DIR}
 # generate md5sums before copying the read files to output folder
 echo "Generate md5sums before copying the read files to output folder..."
 mkdir -p ${OUT_DIR}/md5sum
+out_absolute_path=$(readlink -f "${OUT_DIR}")
 for sample in ${SAMPLE_NAMES}; do
-    echo "cd ${DATA_DIR} && find ${sample} -type f -exec md5sum {} + > ${OUT_DIR}/md5sum/${sample}.chk"
+    echo "cd ${DATA_DIR} && find ${sample} -type f -exec md5sum {} + > ${out_absolute_path}/md5sum/${sample}.chk"
 done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
 
 # copy the samples to output folder
@@ -137,7 +156,7 @@ done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
 # check md5sums after copying
 echo "Checking md5sums of read files in output folder..."
 for sample in ${SAMPLE_NAMES}; do
-    echo "cd ${OUT_DIR} && md5sum -c ${OUT_DIR}/md5sum/${sample}.chk"
+    echo "cd ${OUT_DIR} && md5sum -c ${out_absolute_path}/md5sum/${sample}.chk"
 done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%" > ${OUT_DIR}/md5sum/check1.txt
 
 if grep -q 'FAILED' "${OUT_DIR}/md5sum/check1.txt"; then
@@ -163,50 +182,62 @@ function merge_reads(){
     out_file=${out_dir}/${sample}_${read_index}.fastq.gz
     rm -rf ${merged_file} ${merged_compress_file} ${out_file}
 
-    # unzip the reads and concat into one file
-    if [ "$test_mode" = true ]; then
-        for f in ${read_files}; do
-            zcat -cdk ${f} | head -10 >>  ${merged_file}
-        done
+    IFS=' ' read -r -a read_files_arr <<< "$read_files"
+    num_read_files=${#read_files_arr[@]}
+
+
+    # check if there are more than 1 read files
+    if ((num_read_files > 1)); then
+          echo "found more than one read files, we will merge them into one file."
+
+          # unzip the reads and concat into one file
+          if [ "$test_mode" = true ]; then
+              for f in ${read_files}; do
+                  zcat -cdk ${f} | head -10 >>  ${merged_file}
+              done
+          else
+              for f in ${read_files}; do
+                 gzip -cdk ${f} >>  ${merged_file}
+               done
+          fi
+
+          # check if merged reads file has the same number of lines as the sum of
+          # the pre-merged read files
+          lines_in_merged_file=`wc -l ${merged_file} | awk '{print $1}'`
+
+          if [ "$test_mode" = true ]; then
+             lines_in_pre_merged_file=`for f in ${read_files}; do
+                                       zcat ${f} | head -10 |wc -l
+                                    done | awk '{ SUM += $0} END { print SUM }'`
+          else
+              lines_in_pre_merged_file=`for f in ${read_files}; do
+                                       zcat ${f} | wc -l
+                                    done | awk '{ SUM += $0} END { print SUM }'`
+          fi
+
+          if [ ! ${lines_in_merged_file} -eq ${lines_in_pre_merged_file} ];then
+               >&2 echo "Error: number of rows differ after concatenating read files.  \
+               Expecting: ${lines_in_pre_merged_file}    " `basename ${merged_file}`": ${lines_in_merged_file} "
+               exit 255
+          fi
+
+          # compress the merged read files
+          gzip -fk ${merged_file}
+
+          # move the compressed file to the output folder
+          mv ${merged_compress_file} ${out_file}
+
+          # check the compressed merged read files has the same number of rows as the
+          # uncompressed file
+          lines_in_merged_compressed_out_file=`zcat ${out_file} | wc -l`
+          if [ ! ${lines_in_merged_file} -eq ${lines_in_merged_compressed_out_file} ];then
+               >&2 echo "Error: number of rows differ after compressing. \
+               Expecting : ${lines_in_merged_file}     " `basename ${merged_file}`": ${lines_in_merged_compressed_out_file} "
+               exit 255
+          fi
     else
-        for f in ${read_files}; do
-           gzip -cdk ${f} >>  ${merged_file}
-         done
-    fi
-
-    # check if merged reads file has the same number of lines as the sum of
-    # the pre-merged read files
-    lines_in_merged_file=`wc -l ${merged_file} | awk '{print $1}'`
-
-    if [ "$test_mode" = true ]; then
-       lines_in_pre_merged_file=`for f in ${read_files}; do
-                                 zcat ${f} | head -10 |wc -l
-                              done | awk '{ SUM += $0} END { print SUM }'`
-    else
-        lines_in_pre_merged_file=`for f in ${read_files}; do
-                                 zcat ${f} | wc -l
-                              done | awk '{ SUM += $0} END { print SUM }'`
-    fi
-
-    if [ ! ${lines_in_merged_file} -eq ${lines_in_pre_merged_file} ];then
-         >&2 echo "Error: number of rows differ after concatenating read files.  \
-         Expecting: ${lines_in_pre_merged_file}    " `basename ${merged_file}`": ${lines_in_merged_file} "
-         exit 255
-    fi
-
-    # compress the merged read files
-    gzip -fk ${merged_file}
-
-    # move the compressed file to the output folder
-    mv ${merged_compress_file} ${out_file}
-
-    # check the compressed merged read files has the same number of rows as the
-    # uncompressed file
-    lines_in_merged_compressed_out_file=`zcat ${out_file} | wc -l`
-    if [ ! ${lines_in_merged_file} -eq ${lines_in_merged_compressed_out_file} ];then
-         >&2 echo "Error: number of rows differ after compressing. \
-         Expecting : ${lines_in_merged_file}     " `basename ${merged_file}`": ${lines_in_merged_compressed_out_file} "
-         exit 255
+      echo "found only one read file, we will copy it to the output folder."
+      cp ${read_files} ${out_file}
     fi
 }
 
@@ -229,37 +260,48 @@ set +a
 echo "Merging samples..."
 for sample in ${SAMPLE_NAMES}; do
     mkdir -p ${OUT_DIR}/${sample}/merged
-    read_1_files="$(ls ${OUT_DIR}/${sample}/${READ1_IDENTIFIER})"
-    read_2_files="$(ls ${OUT_DIR}/${sample}/${READ2_IDENTIFIER})"
 
-    ## check number_of_read1_files = number_of_read2_files
-    number_of_read1_files=`echo ${read_1_files} | tr ' ' '\n' | wc -l`
-    number_of_read2_files=`echo ${read_2_files} | tr ' ' '\n' | wc -l`
-    if [ ! ${number_of_read1_files} -eq ${number_of_read2_files} ]; then
-         >&2 echo "Error: The number of files for read_1 and read_2 is not equal for sample: ${sample}"
-         >&2 echo "Read 1 found:"
-         >&2 echo "${read_1_files}"
-         >&2 echo "Read 2 found:"
-         >&2 echo "${read_2_files}"
-         exit 1
+    if [ "${IS_PAIR_END}" = true ]; then
+        read_1_files="$(ls ${OUT_DIR}/${sample}/${READ1_IDENTIFIER})"
+        read_2_files="$(ls ${OUT_DIR}/${sample}/${READ2_IDENTIFIER})"
+
+        ## check number_of_read1_files = number_of_read2_files
+        number_of_read1_files=`echo ${read_1_files} | tr ' ' '\n' | wc -l`
+        number_of_read2_files=`echo ${read_2_files} | tr ' ' '\n' | wc -l`
+        if [ ! ${number_of_read1_files} -eq ${number_of_read2_files} ]; then
+             >&2 echo "Error: The number of files for read_1 and read_2 is not equal for sample: ${sample}"
+             >&2 echo "Read 1 found:"
+             >&2 echo "${read_1_files}"
+             >&2 echo "Read 2 found:"
+             >&2 echo "${read_2_files}"
+             exit 1
+        fi
+
+        echo "merge_reads ${OUT_DIR} ${sample} 1 ${FINAL_DIR} ${TEST_MODE} " ${read_1_files}
+        echo "merge_reads ${OUT_DIR} ${sample} 2 ${FINAL_DIR} ${TEST_MODE} " ${read_2_files}
+    else
+        read_1_files="$(ls ${OUT_DIR}/${sample}/*.fastq.gz)"
+        echo "merge_reads ${OUT_DIR} ${sample} 1 ${FINAL_DIR} ${TEST_MODE} " ${read_1_files}
     fi
 
-    echo "merge_reads ${OUT_DIR} ${sample} 1 ${FINAL_DIR} ${TEST_MODE} " ${read_1_files}
-    echo "merge_reads ${OUT_DIR} ${sample} 2 ${FINAL_DIR} ${TEST_MODE} " ${read_2_files}
 done |  xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
 
-# check if the two final fastq.gz files for each sample have the same number of
-# rows
-echo "Checking final reads has the same number of rows between pairs..."
-for sample in ${SAMPLE_NAMES}; do
-    echo "check_two_pairs_equal_lines ${FINAL_DIR}/${sample}_1.fastq.gz ${FINAL_DIR}/${sample}_2.fastq.gz"
-done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
+# check if the two final fastq.gz files for each sample have the same number of rows
+# only for pairend reads
+if [ "${IS_PAIR_END}" = true ]; then
+  echo "Checking final reads has the same number of rows between pairs..."
+  for sample in ${SAMPLE_NAMES}; do
+      echo "check_two_pairs_equal_lines ${FINAL_DIR}/${sample}_1.fastq.gz ${FINAL_DIR}/${sample}_2.fastq.gz"
+  done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%"
+fi
 
 # generate md5sums for the final fastq.gz files
 echo "Generate md5sum for final reads..."
 for sample in ${SAMPLE_NAMES}; do
     echo "cd ${FINAL_DIR} && md5sum ${sample}_1.fastq.gz"
-    echo "cd ${FINAL_DIR} && md5sum ${sample}_2.fastq.gz"
+    if [ "${IS_PAIR_END}" = true ]; then
+      echo "cd ${FINAL_DIR} && md5sum ${sample}_2.fastq.gz"
+    fi
 done | xargs -t -n 1 -P ${NUM_CORES} -I % bash -c "%" > ${FINAL_DIR}/md5sum.txt
 
 echo "Finished! The files for upload can be found in ${FINAL_DIR}"
