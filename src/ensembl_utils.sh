@@ -62,7 +62,7 @@ declare -A BIOMART_URL=(
 function download_from_ensembl {
     local FILE=$1
 
-    wget --user=anonymous --password=${EMAIL} ftp://ftp.ensembl.org/${FILE}
+    wget --user=anonymous --password=${EMAIL} http://ftp.ensembl.org/${FILE}
 }
 
 function get_assembly {
@@ -135,7 +135,7 @@ function get_primary_chromosomes {
     local SPECIES=$1
     local VERSION=$2
 
-    local enmsebl_folder="/srv/data/genome"
+    local enmsebl_folder="/Users/xinhe/Documents/Workspace/srv/data/genome/"
     local assembly_type=`get_assembly_type ${SPECIES}`
 
     ls -1 ${enmsebl_folder}/${SPECIES}/ensembl-${VERSION}/${assembly_type} | sed 's/.fa//'
