@@ -135,7 +135,7 @@ function get_primary_chromosomes {
     local SPECIES=$1
     local VERSION=$2
 
-    local enmsebl_folder="/Users/xinhe/Documents/Workspace/srv/data/genome/"
+    local enmsebl_folder="/srv/data/genome"
     local assembly_type=`get_assembly_type ${SPECIES}`
 
     ls -1 ${enmsebl_folder}/${SPECIES}/ensembl-${VERSION}/${assembly_type} | sed 's/.fa//'
