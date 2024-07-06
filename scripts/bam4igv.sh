@@ -97,6 +97,19 @@ while true; do
   esac
 done
 
+declare -A bam_names
+for bam in ${INPUT_BAM}; do
+  bam_name=$(basename "${bam}")
+
+  # Check if the BAM file name is already in the array
+  if [[ -v "bam_names[$bam_name]" ]]; then
+    echo "Input bams cannot have the same name: $bam_name"
+    exit 1
+  else
+    # Store the file path in the array with the file name as the key
+    bam_names["$bam_name"]="$bam"
+  fi
+done
 
 [[ ! -d ${OUT_DIR} ]] && mkdir ${OUT_DIR}
 export TMPDIR=${OUT_DIR}
