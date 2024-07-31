@@ -64,7 +64,7 @@ declare -A BIOMART_URL=(
 function download_from_ensembl {
     local FILE=$1
 
-    wget --user=anonymous --password=${EMAIL} ftp://ftp.ensembl.org/${FILE}
+    wget --user=anonymous --password=${EMAIL} http://ftp.ensembl.org/${FILE}
 }
 
 function get_assembly {
