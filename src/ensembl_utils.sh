@@ -3,6 +3,7 @@
 declare -A SCIENTIFIC_NAME=(
     ["human"]="homo_sapiens"
     ["mouse"]="mus_musculus"
+    ["mouse_cba"]="mus_musculus_cbaj"
     ["rat"]="rattus_norvegicus"
     ["macaque"]="macaca_mulatta"
     ["chimpanzee"]="pan_troglodytes"
@@ -14,6 +15,7 @@ declare -A SCIENTIFIC_NAME=(
 declare -A ASSEMBLY=(
     ["human"]="GRCh38"
     ["mouse"]="GRCm39"
+    ["mouse_cba"]="CBA_J_v1"
     ["rat"]="mRatBN7.2"
     ["macaque"]="Mmul_8.0.1"
     ["chimpanzee"]="CHIMP2.1.4"
