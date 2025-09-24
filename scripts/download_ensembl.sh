@@ -63,9 +63,7 @@ STAR_VERSIONS=(
 RSEM_VERSION=1.3.1
 
 SALMON_VERSIONS=(
-    "salmon0.8.2"
-    "salmon0.12.0"
-    "salmon1.8.0"
+    "salmon1.10.0"
 )
 
 BOWTIE2_VERSIONS=(
@@ -104,13 +102,14 @@ cd ..
 # Download annotation GTF file
 
 gtf_file=$(get_gtf_file ${SPECIES} ${VERSION})
-
+echo "Downloading GTF file from Ensembl: ${gtf_file}..."
 download_from_ensembl pub/release-${VERSION}/gtf/${scientific_name}/${gtf_file}.gz  
 
 gunzip -c ${gtf_file}.gz | tail -n +6 > ${gtf_file}
 rm ${gtf_file}.gz
 
 # Create STAR indices
+echo "Creating STAR indices.."
 for star in ${STAR_VERSIONS[@]}
 do
     star_version="$(echo ${star} | sed 's/STAR//')"
@@ -125,6 +124,7 @@ rm -rf STAR_indices/${assembly_type}
 ln -s ${OUTPUT_DIR}/STAR_indices/${assembly_type}_${STAR_VERSIONS[-1]#STAR} STAR_indices/${assembly_type}
 
 # Create Salmon
+echo "Creating Salmon indices.."
 transcripts_ref=transcripts_ref/transcripts
 transcripts_fasta=${transcripts_ref}.transcripts.fa
 mkdir -p ${transcripts_ref}
@@ -145,7 +145,7 @@ ln -s ${OUTPUT_DIR}/SALMON_indices/${assembly_type}_${SALMON_VERSIONS[-1]#salmon
 
 
 # Create Bowtie indexes
-
+echo "Creating Bowtie2 indices.."
 for bowtie2 in ${BOWTIE2_VERSIONS[@]}
 do
     bowtie2_version="$(echo ${bowtie2} | sed 's/bowtie2-//')"
@@ -161,9 +161,11 @@ rm -rf BOWTIE2_indices/${assembly_type}
 ln -s ${OUTPUT_DIR}/BOWTIE2_indices/${assembly_type}_${BOWTIE2_VERSIONS[-1]#bowtie2-} BOWTIE2_indices/${assembly_type}
 
 # Create Bisulfite index
+echo "Creating Bisulfite index.."
 bismark_genome_preparation --bowtie2 --parallel ${NUM_THREADS} .
 
 # Download gene and ortholog information
+echo "Downloading gene and ortholog information.."
 download_gene_tb ${SPECIES} ${VERSION} > genes.tsv
 download_transcript_tb ${SPECIES} ${VERSION} > transcripts.tsv
 
@@ -176,11 +178,12 @@ if [[ "${SPECIES}" != "human" ]]; then
 fi
 
 # Generating refFlat file for Picard RNA-seq metrics
+echo "Generating refFlat file for Picard RNA-seq metrics.."
 mkdir -p picard
 generate_picard_refFlat picard ${SPECIES} ${VERSION} ${gtf_file}
 
 # Generating get_gene_lengths file
-echo "Running get_gene_lengths for species ...."
+echo "Running get_gene_lengths for species ${SPECIES}..."
 get_gene_lengths ${gtf_file} > ./gene_lengths.csv
 # Construct transcript->gene mapping file for tximport
 awk '$3=="transcript" {print $14, $10}' ${gtf_file} | sed 's/"//g;s/;//g' > ./tx2gene.tsv

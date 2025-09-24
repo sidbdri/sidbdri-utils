@@ -16,7 +16,7 @@ declare -A ASSEMBLY=(
     ["human"]="GRCh38"
     ["mouse"]="GRCm39"
     ["mouse_cba"]="CBA_J_v1"
-    ["rat"]="mRatBN7.2"
+    ["rat"]="GRCr8"
     ["macaque"]="Mmul_8.0.1"
     ["chimpanzee"]="CHIMP2.1.4"
     ["castaneus"]="CAST_EiJ_v1"
@@ -27,6 +27,8 @@ declare -A ASSEMBLY=(
 #check version/url here:
 # https://www.ensembl.org/info/website/archives/index.html
 declare -A BIOMART_URL=(
+    ["115"]="sep2025.archive.ensembl.org"
+#    ["114"]="may2025.archive.ensembl.org"
     ["113"]="oct2024.archive.ensembl.org"
     ["112"]="may2024.archive.ensembl.org"
     ["111"]="jan2024.archive.ensembl.org"
@@ -198,6 +200,7 @@ function query_biomart {
     local biomart_url=`get_biomart_url ${VERSION}`
 
     query="http://${biomart_url}/biomart/martservice?query="$(echo $query | tr -d '\n')
+    >&2 echo "query: "$query
 
     if [ "${HEADER}" = true ] ; then
         echo "${header}"

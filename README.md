@@ -2,6 +2,8 @@
 
 #### `download_ensembl.sh`
 
+To use the script, you need to create a python virtual environment and install the requirements.
+
 This script downloads and processes genome sequences and annotations for a particular species from an Ensembl release, e.g.
 
     download_ensembl mouse 94 <your_email> <output_directory>
