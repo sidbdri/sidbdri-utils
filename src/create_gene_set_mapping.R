@@ -49,6 +49,7 @@ get_gene_sets <- function(species, gene_set_name, reference_species=NA) {
   }
   message(str_c('Processing ', species, ' ', gene_set_name, ' using ', reference_species, ' as reference'))
   
+  file_name <- file_list[[reference_species]][[gene_set_name]]
   msigdb_data <- file.path(msigdb_path,file_name) %>% read_lines()
   
   gene_set_names <- map_chr(msigdb_data, function(x) {str_split(x, "\t")[[1]][1]})
