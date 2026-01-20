@@ -43,6 +43,7 @@ file_list <- list(
 get_gene_sets <- function(species, gene_set_name, reference_species=NA) {
   if (species == 'rat') {
     reference_species <- 'mouse'
+    msigdb_path = str_c('/srv/data/genome/', reference_species, '/msigdb/v2025.1')
   }
   if (is.na(reference_species)) {
     reference_species <- species
