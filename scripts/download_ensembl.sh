@@ -56,8 +56,9 @@ BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 source "${BASE_DIR}/../includes.sh"
 
 STAR_VERSIONS=(
-    "STAR2.7.0f"
-    "STAR2.7.9a"
+    # "STAR2.7.0f"
+    # "STAR2.7.9a"
+    "STAR2.7.11b"
 )
 
 RSEM_VERSION=1.3.1
