@@ -191,3 +191,10 @@ awk '$3=="transcript" {print $14, $10}' ${gtf_file} | sed 's/"//g;s/;//g' > ./tx
 
 # We generate the species specific gene set
 Rscript ${BASE_DIR}/src/create_gene_set_mapping.R ${SPECIES} ${VERSION} ${OUTPUT_DIR}
+
+# Disable process-group kill so verification can finish cleanly
+trap - EXIT
+
+echo
+echo "Running post-download verification..."
+verify_ensembl_download ${SPECIES} ${VERSION} ${OUTPUT_DIR}
